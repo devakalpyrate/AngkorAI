@@ -309,8 +309,8 @@
                         <span>Download .angkor File</span>
                     </button>
                     <button class="btn btn-secondary" style="flex: 1; min-width: 150px; justify-content: center; gap: 8px; padding: 10px 14px;" onclick="generateSyncCode()" id="generateSyncBtn">
-                        <i data-feather="zap"></i>
-                        <span>Get 6-Digit Sync Code</span>
+                        <i data-feather="grid"></i>
+                        <span>Generate Code & QR</span>
                     </button>
                 </div>
 
@@ -1438,7 +1438,7 @@
             const btn = document.getElementById('generateSyncBtn');
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = `<i data-feather="loader" class="spin"></i> <span>Generating Sync Code...</span>`;
+            btn.innerHTML = `<i data-feather="loader" class="spin"></i> <span>Generating Code & QR...</span>`;
             if (typeof feather !== 'undefined') feather.replace();
 
             const payload = {
