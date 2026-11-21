@@ -28,7 +28,7 @@
     <!-- QR Code Generator & Mobile Camera Scanner Engine -->
     <script src="{{ url_for('static', filename='js/qrcode.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/html5-qrcode.min.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=3.9">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=4.0">
 </head>
 <body>
     <div class="bg-grid"></div>
@@ -1488,10 +1488,10 @@
                     qrContainer.innerHTML = '';
                     new QRCode(qrContainer, {
                         text: qrPayload,
-                        width: 140,
-                        height: 140,
+                        width: 170,
+                        height: 170,
                         colorDark: "#ffffff",
-                        colorLight: "#0a0a0d",
+                        colorLight: "#000000",
                         correctLevel: QRCode.CorrectLevel.M
                     });
                 }

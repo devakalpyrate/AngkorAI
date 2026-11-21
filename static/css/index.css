@@ -3103,18 +3103,35 @@ main {
    QR Code Generator & Mobile Camera Scanner
    ========================================================================== */
 .sync-qr-container {
-    background: #0a0a0d;
-    padding: 8px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    display: inline-flex;
+    background: #000000;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex !important;
     justify-content: center;
     align-items: center;
+    width: fit-content;
+    margin: 6px auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
 }
-.sync-qr-container img,
+/* QRCode.js creates both a temporary canvas and an img tag.
+   Keep canvas hidden so only ONE perfectly square QR image appears! */
 .sync-qr-container canvas {
+    display: none !important;
+}
+.sync-qr-container img {
     display: block !important;
-    border-radius: 4px;
+    width: 170px !important;
+    height: 170px !important;
+    min-width: 170px !important;
+    min-height: 170px !important;
+    max-width: 170px !important;
+    max-height: 170px !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 6px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    margin: 0 auto;
 }
 
 /* Mobile-only QR scanner button: hidden on desktop, visible on mobile */
