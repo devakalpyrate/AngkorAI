@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}?v=3.4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}?v=3.6">
     <script>
         if (window.innerWidth <= 960) {
             window.location.replace('/home');
@@ -35,10 +35,6 @@
                     <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Angkor AI Logo" class="project-logo">
                     <span>Angkor AI</span>
                 </a>
-                <span class="nav-brand-divider"></span>
-                <a href="https://itsme-gilt.vercel.app" target="_blank" rel="noopener noreferrer" class="nav-brand-emblem-link" title="Developed by DLM">
-                    <img src="{{ url_for('static', filename='images/dlm.png') }}" alt="DLM" class="nav-brand-emblem">
-                </a>
             </div>
             <div class="navbar-right">
                 <nav class="nav-links">
@@ -46,12 +42,8 @@
                     <a href="/about" class="nav-link active">About</a>
                 </nav>
                 <div class="nav-actions">
-                    <a href="/home" class="nav-settings-btn" title="Settings & Data Vault">
+                    <a href="/home" class="nav-settings-btn" title="Settings & Data Vault" aria-label="Settings">
                         <i data-feather="settings"></i>
-                        <span>Settings</span>
-                    </a>
-                    <a href="https://itsme-gilt.vercel.app" target="_blank" rel="noopener noreferrer" class="dlm-badge" title="Developed by DLM">
-                        <span class="dlm-pill">DLM</span>
                     </a>
                 </div>
             </div>
@@ -79,7 +71,7 @@
 
     <!-- Footer Bar -->
     <footer class="footer-bar">
-        <p>Developed by <a href="https://itsme-gilt.vercel.app" target="_blank" rel="noopener noreferrer">DLM</a> &bull; Angkor AI</p>
+        <p>Angkor AI &bull; Video Intelligence & Crux Engine</p>
     </footer>
 
     <script src="{{ url_for('static', filename='js/about.js') }}"></script>

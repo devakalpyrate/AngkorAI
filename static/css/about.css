@@ -227,26 +227,29 @@ body {
 .nav-settings-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-pill);
-    padding: 5px 12px;
-    color: var(--text-primary);
-    font-size: 0.78rem;
-    font-weight: 500;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    padding: 0;
     cursor: pointer;
     transition: var(--transition);
     text-decoration: none;
 }
 .nav-settings-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: var(--border-hover);
-    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: var(--text-primary);
+    transform: translateY(-1px) rotate(25deg);
 }
-.nav-settings-btn i {
-    width: 13px;
-    height: 13px;
+.nav-settings-btn i,
+.nav-settings-btn svg {
+    width: 16px;
+    height: 16px;
 }
 
 .github-btn {

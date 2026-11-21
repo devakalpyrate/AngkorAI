@@ -25,7 +25,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
     <!-- html2pdf for Client-Side PDF Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=3.4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=3.6">
 </head>
 <body>
     <div class="bg-grid"></div>
@@ -41,10 +41,6 @@
                 <a href="/home" class="brand-logo" title="Angkor AI">
                     <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Angkor AI Logo" class="project-logo">
                     <span>Angkor AI</span>
-                </a>
-                <span class="nav-brand-divider"></span>
-                <a href="https://itsme-gilt.vercel.app" target="_blank" rel="noopener noreferrer" class="nav-brand-emblem-link" title="Developed by DLM">
-                    <img src="{{ url_for('static', filename='images/dlm.png') }}" alt="DLM" class="nav-brand-emblem">
                 </a>
             </div>
 
@@ -68,13 +64,9 @@
                     <a href="/about" class="nav-link">About</a>
                 </nav>
                 <div class="nav-actions">
-                    <button class="nav-settings-btn" onclick="openSettingsModal()" title="Settings & Data Vault">
+                    <button class="nav-settings-btn" onclick="openSettingsModal()" title="Settings & Data Vault" aria-label="Settings">
                         <i data-feather="settings"></i>
-                        <span>Settings</span>
                     </button>
-                    <a href="https://itsme-gilt.vercel.app" target="_blank" rel="noopener noreferrer" class="dlm-badge" title="Developed by DLM">
-                        <span class="dlm-pill">DLM</span>
-                    </a>
                 </div>
             </div>
         </div>
@@ -265,9 +257,9 @@
         </main>
     </div>
 
-    <!-- Footer Bar (MetaCleaner style) -->
+    <!-- Footer Bar -->
     <footer class="footer-bar">
-        <p>Developed by <a href="https://itsme-gilt.vercel.app" target="_blank" rel="noopener noreferrer">DLM</a> &bull; Angkor AI</p>
+        <p>Angkor AI &bull; Video Intelligence & Crux Engine</p>
     </footer>
 
 
