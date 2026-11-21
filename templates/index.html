@@ -280,19 +280,19 @@
                 </button>
             </div>
 
-            <!-- Modal Tabs (Export & Import Only) -->
+            <!-- Modal Tabs (Export & Import) -->
             <div class="modal-tabs compact-tabs">
                 <button class="modal-tab active" id="tabExportBtn" onclick="switchDataModalTab('export')">
                     <i data-feather="upload-cloud"></i>
-                    <span>Export (.angkor)</span>
+                    <span>Export Vault</span>
                 </button>
                 <button class="modal-tab" id="tabImportBtn" onclick="switchDataModalTab('import')">
                     <i data-feather="download-cloud"></i>
-                    <span>Import (.angkor)</span>
+                    <span>Import Vault</span>
                 </button>
             </div>
 
-            <!-- Tab 1: Export Content (Binary Only) -->
+            <!-- Tab 1: Export Content -->
             <div class="modal-tab-content compact-content active" id="exportTabContent">
                 <!-- Small Compact Saved Lectures Box -->
                 <div class="mini-summary-pill">
@@ -300,16 +300,39 @@
                     <span><strong id="exportLecturesCount">0</strong> Saved Lectures &bull; <span id="exportDataSize">0 KB</span></span>
                 </div>
 
-                <p class="compact-desc">
-                    Exports all your notes, transcripts with timestamps, and video metadata into a secure, unreadable <strong>binary file (.angkor)</strong> for other browsers.
-                </p>
+                <div class="export-actions-row">
+                    <button class="btn btn-primary" style="flex: 1; min-width: 150px; justify-content: center; gap: 8px; padding: 10px 14px;" onclick="exportDataToAngkorBinary()" id="exportBinaryBtn">
+                        <i data-feather="download"></i>
+                        <span>Download .angkor File</span>
+                    </button>
+                    <button class="btn btn-secondary" style="flex: 1; min-width: 150px; justify-content: center; gap: 8px; padding: 10px 14px;" onclick="generateSyncCode()" id="generateSyncBtn">
+                        <i data-feather="zap"></i>
+                        <span>Get 6-Digit Sync Code</span>
+                    </button>
+                </div>
 
-                <button class="btn btn-primary btn-block" style="padding: 12px 16px; justify-content: center; gap: 8px;" onclick="exportDataToAngkorBinary()" id="exportBinaryBtn">
-                    <i data-feather="download"></i>
-                    <span>Download .angkor Binary File</span>
-                </button>
+                <!-- Generated 6-digit sync code display area (appears on click) -->
+                <div id="syncCodeGeneratedArea" style="display: none; flex-direction: column; gap: 8px; margin-top: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Temporary Sync Code:</span>
+                        <div class="code-timer-bar">
+                            <i data-feather="clock"></i>
+                            <span id="codeTimerCountdown">Valid for 15 mins</span>
+                        </div>
+                    </div>
+                    <div class="code-display-container" style="margin: 4px 0;">
+                        <div class="code-value" id="generatedCodeDisplay">--- ---</div>
+                        <button class="btn-copy-code" onclick="copySyncCode()" id="copySyncCodeBtn" title="Copy sync code">
+                            <i data-feather="copy" id="copyCodeIcon"></i>
+                            <span id="copyCodeText">Copy</span>
+                        </button>
+                    </div>
+                    <p style="font-size: 0.72rem; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+                        Enter this code on your other browser or mobile phone to transfer all notes instantly.
+                    </p>
+                </div>
 
-                <div class="modal-footer-danger">
+                <div class="modal-footer-danger" style="margin-top: 10px;">
                     <button class="btn-link-danger" onclick="clearAllStoredHistory()" title="Delete all history from this browser">
                         <i data-feather="trash-2"></i>
                         <span>Clear All Stored Lectures</span>
@@ -317,22 +340,47 @@
                 </div>
             </div>
 
-            <!-- Tab 2: Import Content (Binary Only) -->
+            <!-- Tab 2: Import Content -->
             <div class="modal-tab-content compact-content" id="importTabContent" style="display: none;">
                 <div class="session-id-notice compact">
                     <i data-feather="info"></i>
                     <span>Restores notes & transcripts. Each lecture gets a <strong>fresh unique session ID</strong> in this browser.</span>
                 </div>
 
-                <!-- Dropzone for .angkor binary file -->
-                <div class="dropzone compact-dropzone" id="importDropzone" onclick="triggerFileInput()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-                    <i data-feather="file" class="dropzone-icon"></i>
-                    <span class="dropzone-text">Click or drag your <strong>.angkor</strong> binary file here</span>
+                <!-- Option A: 6-Digit Sync Code Input -->
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+                    <label style="font-size: 0.74rem; color: var(--text-secondary); font-weight: 500;">
+                        <i data-feather="zap" style="width: 13px; height: 13px; vertical-align: middle; margin-right: 3px;"></i>
+                        Option 1: Quick 6-Digit Sync Code
+                    </label>
+                    <div class="code-input-row">
+                        <input type="text" id="syncCodeInput" class="sync-code-input" placeholder="e.g. 617-254" maxlength="7" autocomplete="off" oninput="formatCodeInput(this)">
+                        <button class="btn btn-primary" onclick="fetchFromSyncCode()" id="fetchSyncBtn" style="padding: 0 16px;">
+                            <i data-feather="download-cloud"></i>
+                            <span>Fetch Code</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Option B: Dropzone for .angkor binary file -->
+                <div class="dropzone compact-dropzone" id="importDropzone" onclick="triggerFileInput()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" style="padding: 12px 14px; margin-bottom: 8px;">
+                    <i data-feather="file" class="dropzone-icon" style="width: 18px; height: 18px;"></i>
+                    <span class="dropzone-text" style="font-size: 0.76rem;">Option 2: Click or drag <strong>.angkor</strong> binary file here</span>
                     <input type="file" id="importFileInput" accept=".angkor,application/octet-stream" style="display: none;" onchange="handleFileSelected(event)">
                 </div>
 
-                <!-- Preview and Confirmation Box (Shown once file is parsed) -->
-                <div id="importPreviewArea" class="import-preview-box compact" style="display: none;">
+                <!-- Option C: Paste text / code string directly -->
+                <details class="paste-details" style="font-size: 0.72rem;">
+                    <summary style="cursor: pointer; color: var(--text-muted); font-size: 0.72rem;">Option 3: Or paste raw backup code / JSON string</summary>
+                    <textarea id="importPasteText" class="paste-textarea" placeholder="Paste your exported .angkor code string or JSON text here..." rows="2" style="font-size: 0.7rem;"></textarea>
+                    <button class="btn btn-secondary btn-sm" onclick="parsePastedJSON()" style="margin-top: 6px; width: 100%; justify-content: center;">
+                        <i data-feather="check"></i>
+                        <span>Parse Pasted Code</span>
+                    </button>
+                </details>
+
+                <!-- Preview and Confirmation Box (Shown once file or code is parsed) -->
+                <div id="importPreviewArea" class="import-preview-box compact" style="display: none; margin-top: 10px;">
                     <div class="preview-header">
                         <span class="preview-title" id="previewSummaryText">Found 0 lectures</span>
                         <span class="preview-size-badge" id="previewSizeBadge">0 KB</span>
@@ -1359,9 +1407,10 @@
 
                 currentSyncCode = data.code;
                 document.getElementById('generatedCodeDisplay').textContent = data.code;
-                document.getElementById('syncCodeInitialArea').style.display = 'none';
+                const initArea = document.getElementById('syncCodeInitialArea');
+                if (initArea) initArea.style.display = 'none';
                 const genArea = document.getElementById('syncCodeGeneratedArea');
-                genArea.style.display = 'flex';
+                if (genArea) genArea.style.display = 'flex';
 
                 let remaining = data.expires_in_seconds || 900;
                 const countdownEl = document.getElementById('codeTimerCountdown');
