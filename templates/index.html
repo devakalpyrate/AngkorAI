@@ -25,7 +25,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
     <!-- html2pdf for Client-Side PDF Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=3.6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=3.7">
 </head>
 <body>
     <div class="bg-grid"></div>
@@ -94,13 +94,6 @@
             
             <div class="history-list" id="historyList">
                 <div class="empty-history">No lecture history found. Run an analysis to see notes here.</div>
-            </div>
-
-            <div class="sidebar-footer">
-                <button class="sidebar-settings-btn" onclick="openSettingsModal()" title="Settings, Backup & Data Vault">
-                    <i data-feather="settings"></i>
-                    <span>Settings & Data Vault</span>
-                </button>
             </div>
         </aside>
 
@@ -266,16 +259,16 @@
 
     <!-- Settings & Cross-Browser Data Vault Modal -->
     <div class="data-modal-backdrop" id="dataModalBackdrop" onclick="handleDataModalBackdropClick(event)">
-        <div class="data-modal-card" id="dataModalCard" role="dialog" aria-modal="true" aria-labelledby="dataModalTitle">
+        <div class="data-modal-card compact-card" id="dataModalCard" role="dialog" aria-modal="true" aria-labelledby="dataModalTitle">
             <!-- Header -->
-            <div class="data-modal-header">
+            <div class="data-modal-header compact-header">
                 <div class="modal-title-group">
-                    <div class="modal-badge-icon">
+                    <div class="modal-badge-icon compact-icon">
                         <i data-feather="settings"></i>
                     </div>
                     <div>
-                        <h3 id="dataModalTitle">Settings & Data Vault</h3>
-                        <p class="modal-subtitle">Backup, export, and migrate your lecture notes and transcripts across browsers</p>
+                        <h3 id="dataModalTitle">Data Vault</h3>
+                        <p class="modal-subtitle">Backup and migrate notes across browsers</p>
                     </div>
                 </div>
                 <button class="modal-close-btn" onclick="closeDataModal()" title="Close dialog" aria-label="Close dialog">
@@ -283,268 +276,86 @@
                 </button>
             </div>
 
-            <!-- Modal Tabs -->
-            <div class="modal-tabs">
+            <!-- Modal Tabs (Export & Import Only) -->
+            <div class="modal-tabs compact-tabs">
                 <button class="modal-tab active" id="tabExportBtn" onclick="switchDataModalTab('export')">
                     <i data-feather="upload-cloud"></i>
-                    <span>Export / Backup</span>
+                    <span>Export (.angkor)</span>
                 </button>
                 <button class="modal-tab" id="tabImportBtn" onclick="switchDataModalTab('import')">
                     <i data-feather="download-cloud"></i>
-                    <span>Import / Restore</span>
-                </button>
-                <button class="modal-tab" id="tabStorageBtn" onclick="switchDataModalTab('storage')">
-                    <i data-feather="sliders"></i>
-                    <span>Storage & System</span>
+                    <span>Import (.angkor)</span>
                 </button>
             </div>
 
-            <!-- Tab 1: Export Content -->
-            <div class="modal-tab-content active" id="exportTabContent">
-                <!-- Data stats summary -->
-                <div class="data-summary-box">
-                    <div class="summary-stat">
-                        <span class="stat-num" id="exportLecturesCount">0</span>
-                        <span class="stat-label">Saved Lectures</span>
-                    </div>
-                    <div class="summary-divider"></div>
-                    <div class="summary-stat">
-                        <span class="stat-num" id="exportDataSize">0 KB</span>
-                        <span class="stat-label">Storage Size</span>
-                    </div>
-                    <div class="summary-divider"></div>
-                    <div class="summary-stat">
-                        <span class="stat-num" id="exportSourceLabel">This Browser</span>
-                        <span class="stat-label">Origin</span>
-                    </div>
+            <!-- Tab 1: Export Content (Binary Only) -->
+            <div class="modal-tab-content compact-content active" id="exportTabContent">
+                <!-- Small Compact Saved Lectures Box -->
+                <div class="mini-summary-pill">
+                    <i data-feather="database"></i>
+                    <span><strong id="exportLecturesCount">0</strong> Saved Lectures &bull; <span id="exportDataSize">0 KB</span></span>
                 </div>
 
-                <!-- Option 1: Protected Binary Archive (.angkor) -->
-                <div class="sync-section-card">
-                    <div class="sync-section-head">
-                        <div class="sync-section-title">
-                            <i data-feather="shield"></i>
-                            <span>Protected Binary Archive (.angkor)</span>
-                        </div>
-                        <span class="sync-tag-recommended">Recommended</span>
-                    </div>
-                    <p class="sync-desc">
-                        Exports all your documents, transcripts with timestamps, executed notes, and thumbnail links into a secure, tamper-resistant <strong>unreadable binary package</strong>. Perfect for migrating to any other browser.
-                    </p>
-                    <div>
-                        <button class="btn btn-primary" style="width: 100%; justify-content: center; gap: 8px; padding: 12px 18px;" onclick="exportDataToAngkorBinary()" id="exportBinaryBtn">
-                            <i data-feather="download"></i>
-                            <span>Download .angkor Archive</span>
-                        </button>
-                    </div>
-                </div>
+                <p class="compact-desc">
+                    Exports all your notes, transcripts with timestamps, and video metadata into a secure, unreadable <strong>binary file (.angkor)</strong> for other browsers.
+                </p>
 
-                <!-- Option 2: Instant 6-digit sync code -->
-                <div class="sync-section-card secondary">
-                    <div class="sync-section-head">
-                        <div class="sync-section-title">
-                            <i data-feather="zap"></i>
-                            <span>Instant 6-Digit Sync Code</span>
-                        </div>
-                        <span class="sync-tag-recommended">Wireless</span>
-                    </div>
-                    <p class="sync-desc">
-                        Transfer everything directly to your other browser (Chrome, Safari, Edge, or mobile) in seconds using a one-time 6-digit code.
-                    </p>
-                    
-                    <div id="syncCodeInitialArea">
-                        <button class="btn btn-secondary" style="width: 100%; justify-content: center; gap: 8px;" onclick="generateSyncCode()" id="generateSyncBtn">
-                            <i data-feather="key"></i>
-                            <span>Generate 6-Digit Sync Code</span>
-                        </button>
-                    </div>
+                <button class="btn btn-primary btn-block" style="padding: 12px 16px; justify-content: center; gap: 8px;" onclick="exportDataToAngkorBinary()" id="exportBinaryBtn">
+                    <i data-feather="download"></i>
+                    <span>Download .angkor Binary File</span>
+                </button>
 
-                    <div id="syncCodeGeneratedArea" style="display: none; flex-direction: column; gap: 10px;">
-                        <div class="code-display-container">
-                            <div class="code-value" id="generatedCodeDisplay">--- ---</div>
-                            <button class="btn-copy-code" onclick="copySyncCode()" id="copySyncCodeBtn" title="Copy sync code">
-                                <i data-feather="copy" id="copyCodeIcon"></i>
-                                <span id="copyCodeText">Copy</span>
-                            </button>
-                        </div>
-                        <div class="code-timer-bar">
-                            <i data-feather="clock"></i>
-                            <span id="codeTimerCountdown">Valid for 15 minutes</span>
-                        </div>
-                        <div class="quick-steps">
-                            <strong>Steps on your other browser:</strong>
-                            <ol>
-                                <li>Open <code>http://127.0.0.1:5000/home</code> in your other browser.</li>
-                                <li>Click <strong>Settings</strong> &rarr; <strong>Import / Restore</strong>.</li>
-                                <li>Type the 6-digit code above and click <strong>Fetch & Preview</strong>.</li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Option 3: Plain JSON backup and clipboard -->
-                <div class="sync-section-card secondary">
-                    <div class="sync-section-head">
-                        <div class="sync-section-title">
-                            <i data-feather="file-text"></i>
-                            <span>Plain JSON Backup & Clipboard</span>
-                        </div>
-                    </div>
-                    <p class="sync-desc">
-                        Download raw human-readable <code>.json</code> or copy your notes database to clipboard.
-                    </p>
-                    <div class="export-actions-row">
-                        <button class="btn btn-secondary" onclick="exportDataToFile()" id="exportFileBtn">
-                            <i data-feather="download"></i>
-                            <span>Download .JSON Backup</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="exportDataToClipboard()" id="exportClipboardBtn">
-                            <i data-feather="clipboard"></i>
-                            <span>Copy to Clipboard</span>
-                        </button>
-                    </div>
+                <div class="modal-footer-danger">
+                    <button class="btn-link-danger" onclick="clearAllStoredHistory()" title="Delete all history from this browser">
+                        <i data-feather="trash-2"></i>
+                        <span>Clear All Stored Lectures</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Tab 2: Import Content -->
-            <div class="modal-tab-content" id="importTabContent" style="display: none;">
-                <!-- Session ID Notice -->
-                <div class="session-id-notice">
+            <!-- Tab 2: Import Content (Binary Only) -->
+            <div class="modal-tab-content compact-content" id="importTabContent" style="display: none;">
+                <div class="session-id-notice compact">
                     <i data-feather="info"></i>
-                    <span><strong>Session Isolation:</strong> All lecture documents, transcripts, and notes are 100% restored identically, while fresh unique Session/Chat IDs are regenerated for this browser to prevent collision.</span>
+                    <span>Restores notes & transcripts. Each lecture gets a <strong>fresh unique session ID</strong> in this browser.</span>
                 </div>
 
-                <!-- Restore from File (.angkor or .json) -->
-                <div class="sync-section-card">
-                    <div class="sync-section-head">
-                        <div class="sync-section-title">
-                            <i data-feather="upload-cloud"></i>
-                            <span>Upload Backup Archive (.angkor or .json)</span>
-                        </div>
-                        <span class="sync-tag-recommended">Universal</span>
-                    </div>
-                    <div class="dropzone" id="importDropzone" onclick="triggerFileInput()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-                        <i data-feather="file" class="dropzone-icon"></i>
-                        <span class="dropzone-text">Click to choose a <strong>.angkor</strong> binary archive or <strong>.json</strong> file, or drag & drop here</span>
-                        <input type="file" id="importFileInput" accept=".angkor,.bak,.json,application/json,application/octet-stream" style="display: none;" onchange="handleFileSelected(event)">
-                    </div>
-
-                    <details class="paste-details">
-                        <summary>Or paste raw binary/JSON string</summary>
-                        <textarea id="importPasteText" class="paste-textarea" placeholder="Paste your exported .angkor binary string or JSON text here..." rows="4"></textarea>
-                        <button class="btn btn-secondary btn-sm" onclick="parsePastedJSON()" style="margin-top: 8px;">
-                            <i data-feather="check"></i>
-                            <span>Parse Pasted Content</span>
-                        </button>
-                    </details>
+                <!-- Dropzone for .angkor binary file -->
+                <div class="dropzone compact-dropzone" id="importDropzone" onclick="triggerFileInput()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                    <i data-feather="file" class="dropzone-icon"></i>
+                    <span class="dropzone-text">Click or drag your <strong>.angkor</strong> binary file here</span>
+                    <input type="file" id="importFileInput" accept=".angkor,application/octet-stream" style="display: none;" onchange="handleFileSelected(event)">
                 </div>
 
-                <!-- Quick 6-digit sync code input -->
-                <div class="sync-section-card secondary">
-                    <div class="sync-section-head">
-                        <div class="sync-section-title">
-                            <i data-feather="zap"></i>
-                            <span>Load via 6-Digit Sync Code</span>
-                        </div>
-                    </div>
-                    <p class="sync-desc">
-                        Enter the temporary sync code generated from your other browser:
-                    </p>
-                    <div class="code-input-row">
-                        <input type="text" id="syncCodeInput" class="sync-code-input" placeholder="e.g. 617-254" maxlength="7" autocomplete="off" oninput="formatCodeInput(this)">
-                        <button class="btn btn-primary" onclick="fetchFromSyncCode()" id="fetchSyncBtn">
-                            <i data-feather="download-cloud"></i>
-                            <span>Fetch & Preview</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Preview and Confirmation Box (Shown once data is parsed) -->
-                <div id="importPreviewArea" class="import-preview-box" style="display: none;">
+                <!-- Preview and Confirmation Box (Shown once file is parsed) -->
+                <div id="importPreviewArea" class="import-preview-box compact" style="display: none;">
                     <div class="preview-header">
-                        <div class="preview-title">
-                            <i data-feather="check-circle" class="preview-icon"></i>
-                            <span id="previewSummaryText">Found 0 lectures to import</span>
-                        </div>
+                        <span class="preview-title" id="previewSummaryText">Found 0 lectures</span>
                         <span class="preview-size-badge" id="previewSizeBadge">0 KB</span>
                     </div>
 
-                    <!-- Strategy selector: Merge vs Replace -->
-                    <div class="import-mode-selector">
-                        <span class="import-mode-label">Import Strategy:</span>
-                        <div class="radio-options">
-                            <label class="radio-label">
-                                <input type="radio" name="importMode" value="merge" checked>
-                                <span><strong>Merge (Recommended)</strong> &mdash; keeps current lectures and adds new ones with fresh session IDs</span>
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="importMode" value="replace">
-                                <span><strong>Replace</strong> &mdash; overwrites this browser's history with the imported archive</span>
-                            </label>
-                        </div>
+                    <div class="import-mode-selector compact">
+                        <label class="radio-label">
+                            <input type="radio" name="importMode" value="merge" checked>
+                            <span><strong>Merge</strong> (keep current notes, add new)</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="importMode" value="replace">
+                            <span><strong>Replace</strong> (overwrite all notes)</span>
+                        </label>
                     </div>
 
-                    <!-- Items list -->
-                    <div class="preview-items-list" id="previewItemsList"></div>
+                    <div class="preview-items-list compact-list" id="previewItemsList"></div>
 
                     <div class="preview-actions">
-                        <button class="btn btn-primary" onclick="confirmImportData()" id="confirmImportBtn">
-                            <i data-feather="download"></i>
-                            <span>Apply & Restore All Notes</span>
+                        <button class="btn btn-primary btn-sm" onclick="confirmImportData()" id="confirmImportBtn">
+                            <i data-feather="check"></i>
+                            <span>Restore All Notes</span>
                         </button>
-                        <button class="btn btn-secondary" onclick="cancelImportPreview()">
+                        <button class="btn btn-secondary btn-sm" onclick="cancelImportPreview()">
                             <span>Cancel</span>
                         </button>
                     </div>
-                </div>
-            </div>
-
-            <!-- Tab 3: Storage & System Content -->
-            <div class="modal-tab-content" id="storageTabContent" style="display: none;">
-                <!-- Storage Quota Meter -->
-                <div class="storage-meter-box">
-                    <div class="storage-meter-labels">
-                        <span>Browser LocalStorage Usage</span>
-                        <span id="storageUsageRatio">0 KB / 5 MB (0%)</span>
-                    </div>
-                    <div class="storage-meter-track">
-                        <div class="storage-meter-fill" id="storageMeterFill" style="width: 2%;"></div>
-                    </div>
-                    <span style="font-size: 0.72rem; color: var(--text-muted);">
-                        Angkor AI stores your notes strictly inside your browser for maximum privacy without requiring an account.
-                    </span>
-                </div>
-
-                <!-- AI System Pipeline Information -->
-                <div class="sync-section-card secondary">
-                    <div class="sync-section-head">
-                        <div class="sync-section-title">
-                            <i data-feather="cpu"></i>
-                            <span>AI Inference Cascade</span>
-                        </div>
-                        <span class="sync-tag-recommended">Active</span>
-                    </div>
-                    <p class="sync-desc" style="line-height: 1.6;">
-                        &bull; <strong>Primary:</strong> Sarvam AI 105B (Indian & global context optimization)<br>
-                        &bull; <strong>Fallback 1:</strong> Groq LLaMA-3.3-70B (High-speed inference)<br>
-                        &bull; <strong>Fallback 2:</strong> Google Gemini 2.5 Flash (Resilience safety net)<br>
-                        &bull; <strong>Fallback 3:</strong> NVIDIA NIM Nemotron-70B
-                    </p>
-                </div>
-
-                <!-- Danger Zone: Reset All -->
-                <div class="danger-zone-card">
-                    <div class="danger-zone-title">
-                        <i data-feather="alert-triangle"></i>
-                        <span>Danger Zone</span>
-                    </div>
-                    <p class="danger-zone-desc">
-                        Permanently wipe all lecture history, transcripts, and notes stored in this browser. (Make sure you download a <code>.angkor</code> backup before wiping if you want to keep them).
-                    </p>
-                    <button class="btn-danger" onclick="clearAllStoredHistory()">
-                        <i data-feather="trash-2"></i>
-                        <span>Delete All Stored History</span>
-                    </button>
                 </div>
             </div>
         </div>
@@ -1394,19 +1205,15 @@
         function switchDataModalTab(tab) {
             const tabExportBtn = document.getElementById('tabExportBtn');
             const tabImportBtn = document.getElementById('tabImportBtn');
-            const tabStorageBtn = document.getElementById('tabStorageBtn');
 
             const exportTabContent = document.getElementById('exportTabContent');
             const importTabContent = document.getElementById('importTabContent');
-            const storageTabContent = document.getElementById('storageTabContent');
 
             if (tabExportBtn) tabExportBtn.classList.toggle('active', tab === 'export');
             if (tabImportBtn) tabImportBtn.classList.toggle('active', tab === 'import');
-            if (tabStorageBtn) tabStorageBtn.classList.toggle('active', tab === 'storage');
 
             if (exportTabContent) exportTabContent.style.display = (tab === 'export') ? 'flex' : 'none';
             if (importTabContent) importTabContent.style.display = (tab === 'import') ? 'flex' : 'none';
-            if (storageTabContent) storageTabContent.style.display = (tab === 'storage') ? 'flex' : 'none';
 
             updateDataSummary();
 
