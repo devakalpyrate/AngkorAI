@@ -469,10 +469,26 @@ def fetch_sync_code():
         code = request.args.get('code', '')
 
     cleaned_code = re.sub(r'[^a-zA-Z0-9]', '', str(code)).upper()
-    if not cleaned_code or len(cleaned_code) < 4:
-        return jsonify({'error': 'Please provide a valid 6-digit sync code.'}), 400
+    if not cleaned_code or len(cleaned_code) < 3:
+        return jsonify({'error': 'Please provide a valid 6-digit sync code or QR token.'}), 400
 
-    payload = get_sync_payload(cleaned_code)
+    raw_lookup = cleaned_code
+    if raw_lookup.startswith('AKQR'):
+        raw_lookup = raw_lookup[4:]
+
+    # Check direct code first
+    payload = get_sync_payload(raw_lookup) or get_sync_payload(cleaned_code)
+
+    # Fallback: If not found and might be a Hex QR token, decode Hex -> Binary -> Decimal
+    if not payload:
+        try:
+            bin_str = bin(int(raw_lookup, 16))[2:]
+            dec_num = str(int(bin_str, 2)).zfill(6)
+            if dec_num:
+                payload = get_sync_payload(dec_num)
+        except Exception:
+            pass
+
     if not payload:
         return jsonify({'error': 'Sync code is invalid, expired (15m limit), or not found.'}), 404
 
