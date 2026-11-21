@@ -28,7 +28,7 @@
     <!-- QR Code Generator & Mobile Camera Scanner Engine -->
     <script src="{{ url_for('static', filename='js/qrcode.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/html5-qrcode.min.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=4.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=4.1">
 </head>
 <body>
     <div class="bg-grid"></div>
@@ -1482,17 +1482,17 @@
                     hexBadgeEl.textContent = qrPayload;
                 }
 
-                // Render High-Contrast Crisp Monochrome QR Code
+                // Render High-Contrast Standard ISO QR Code (Black on White for instant camera readability)
                 const qrContainer = document.getElementById('syncQrCodeContainer');
                 if (qrContainer && typeof QRCode !== 'undefined') {
                     qrContainer.innerHTML = '';
                     new QRCode(qrContainer, {
                         text: qrPayload,
-                        width: 170,
-                        height: 170,
-                        colorDark: "#ffffff",
-                        colorLight: "#000000",
-                        correctLevel: QRCode.CorrectLevel.M
+                        width: 180,
+                        height: 180,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
                     });
                 }
 

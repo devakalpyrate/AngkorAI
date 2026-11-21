@@ -3103,16 +3103,16 @@ main {
    QR Code Generator & Mobile Camera Scanner
    ========================================================================== */
 .sync-qr-container {
-    background: #000000;
-    padding: 12px;
+    background: #ffffff !important;
+    padding: 12px !important;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.4);
     display: flex !important;
     justify-content: center;
     align-items: center;
     width: fit-content;
-    margin: 6px auto;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+    margin: 8px auto;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
 }
 /* QRCode.js creates both a temporary canvas and an img tag.
    Keep canvas hidden so only ONE perfectly square QR image appears! */
@@ -3121,14 +3121,14 @@ main {
 }
 .sync-qr-container img {
     display: block !important;
-    width: 170px !important;
-    height: 170px !important;
-    min-width: 170px !important;
-    min-height: 170px !important;
-    max-width: 170px !important;
-    max-height: 170px !important;
+    width: 180px !important;
+    height: 180px !important;
+    min-width: 180px !important;
+    min-height: 180px !important;
+    max-width: 180px !important;
+    max-height: 180px !important;
     aspect-ratio: 1 / 1 !important;
-    border-radius: 6px;
+    border-radius: 4px;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     margin: 0 auto;
