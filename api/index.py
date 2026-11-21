@@ -20,9 +20,12 @@ class VercelPathMiddleware:
     def __call__(self, environ, start_response):
         forwarded_uri = environ.get('HTTP_X_FORWARDED_URI') or environ.get('HTTP_X_MATCHED_PATH')
         if forwarded_uri and forwarded_uri not in ('/api/index', '/api/index.py'):
-            path = forwarded_uri.split('?')[0]
+            parts = forwarded_uri.split('?', 1)
+            path = parts[0]
             environ['PATH_INFO'] = path
             environ['REQUEST_URI'] = forwarded_uri
+            if len(parts) > 1 and not environ.get('QUERY_STRING'):
+                environ['QUERY_STRING'] = parts[1]
         return self.wsgi_app(environ, start_response)
 
 

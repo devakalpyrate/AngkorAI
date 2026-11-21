@@ -24,8 +24,8 @@ def get_redis_client():
     if _redis_client is not None:
         return _redis_client
 
-    url = os.environ.get("UPSTASH_REDIS_REST_URL", "").strip()
-    token = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "").strip()
+    url = (os.environ.get("UPSTASH_REDIS_REST_URL") or os.environ.get("KV_REST_API_URL") or "").strip()
+    token = (os.environ.get("UPSTASH_REDIS_REST_TOKEN") or os.environ.get("KV_REST_API_TOKEN") or "").strip()
 
     if url and token:
         try:
