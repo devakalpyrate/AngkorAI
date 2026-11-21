@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angkor AI - Video Intelligence Engine</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <!-- Marked.js Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- DOMPurify HTML Sanitizer -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <!-- KaTeX Math & LaTeX Renderer -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+    <!-- html2pdf for Client-Side PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=3.4">
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-ambient-glow"></div>
+
+    <!-- Header Navbar (MetaCleaner Style) -->
+    <header class="navbar-header">
+        <div class="navbar-container">
+            <div class="navbar-left">
+                <button id="sidebarToggleBtn" class="icon-btn" onclick="toggleSidebar()" title="Toggle History">
+                    <i data-feather="sidebar"></i>
+                </button>
+                <a href="/home" class="brand-logo" title="Angkor AI">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Angkor AI Logo" class="project-logo">
+                    <span>Angkor AI</span>
+                </a>
+                <span class="nav-brand-divider"></span>
+                <a href="https://itsme-gilt.vercel.app" target="_blank" rel="noopener noreferrer" class="nav-brand-emblem-link" title="Developed by DLM">
+                    <img src="{{ url_for('static', filename='images/dlm.png') }}" alt="DLM" class="nav-brand-emblem">
+                </a>
+            </div>
+
+            <!-- Navbar Search (Visible when results are active) -->
+            <div id="topNavSearch" class="navbar-search" style="display: none;">
+                <form onsubmit="handleFormSubmit(event)" class="navbar-search-form">
+                    <div class="input-group">
+                        <i data-feather="youtube"></i>
+                        <input type="text" class="search-input" name="youtubeUrl" placeholder="Paste YouTube link here..." required>
+                        <button type="submit" class="btn btn-primary btn-sm btn-icon-expand" title="Analyze">
+                            <i data-feather="arrow-up"></i>
+                            <span class="btn-expand-text">Analyze</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="navbar-right">
+                <nav class="nav-links">
+                    <a href="/home" class="nav-link active">Home</a>
+                    <a href="/about" class="nav-link">About</a>
+                </nav>
+                <div class="nav-actions">
+                    <button class="nav-sync-btn" onclick="openDataModal()" title="Sync or Transfer data between browsers">
+                        <i data-feather="repeat"></i>
+                        <span>Sync</span>
+                    </button>
+                    <a href="https://github.com/aryavartsubhammoharana/angko-ai" target="_blank" rel="noopener noreferrer" class="github-btn" title="GitHub Repository">
+                        <i data-feather="github"></i>
+                    </a>
+                    <a href="https://itsme-gilt.vercel.app" target="_blank" rel="noopener noreferrer" class="dlm-badge" title="Developed by DLM">
+                        <span class="dlm-pill">DLM</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Backdrop for Mobile Off-Canvas Drawer (Outside grid container) -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
+
+    <div class="app-container">
+        <!-- Sidebar: Video Lecture History -->
+        <aside id="sidebarDrawer">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <button class="sidebar-close-btn" id="sidebarCloseBtn" onclick="toggleSidebar(false)" title="Close Sidebar" aria-label="Close Sidebar">
+                        <i data-feather="x"></i>
+                    </button>
+                    <i data-feather="clock" class="sidebar-clock-icon"></i>
+                    <span>Lecture History</span>
+                </div>
+                <button class="icon-btn" onclick="startNewLecture()" title="New Lecture" style="padding: 4px 8px; font-size: 11px; gap: 4px;">
+                    <i data-feather="plus"></i>
+                    <span>New</span>
+                </button>
+            </div>
+            
+            <div class="history-list" id="historyList">
+                <div class="empty-history">No lecture history found. Run an analysis to see notes here.</div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button class="sidebar-sync-btn" onclick="openDataModal()" title="Export or Import data across browsers">
+                    <i data-feather="repeat"></i>
+                    <span>Sync & Transfer Data</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main>
+            <!-- Hero Empty State (MetaCleaner Workspace Style) -->
+            <div id="heroSearch" class="workspace-hero">
+                <div class="workspace-header">
+                    <div class="status-meta-pill">
+                        <span class="status-indicator-dot active"></span>
+                        <span>Video Intelligence & Crux Engine</span>
+                    </div>
+                    <h1>Analyze Any Video</h1>
+                    <p>Cut through the fluff. Understand exactly what's happening, what's not, and the real ground reality in crisp English.</p>
+                </div>
+
+                <div class="search-box-card">
+                    <form onsubmit="handleFormSubmit(event)">
+                        <div class="input-group">
+                            <i data-feather="youtube"></i>
+                            <input type="text" class="search-input" name="youtubeUrl" placeholder="Paste YouTube link here... (e.g. https://www.youtube.com/watch?v=...)" required autofocus>
+                            <button type="submit" class="btn btn-primary btn-icon-expand" id="heroSubmitBtn" title="Analyze Video">
+                                <i data-feather="arrow-up"></i>
+                                <span class="btn-expand-text">Analyze Video</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="format-pills">
+                    <span class="format-pill">YOUTUBE</span>
+                    <span class="format-pill">GROUND REALITY</span>
+                    <span class="format-pill">WHAT'S HAPPENING</span>
+                    <span class="format-pill">WHAT'S NOT</span>
+                    <span class="format-pill">CRISP ENGLISH TL;DR</span>
+                    <span class="format-pill">LATEX FORMULAS</span>
+                </div>
+            </div>
+
+            <!-- Loading Progress Stepper -->
+            <section class="loader-container" id="loaderContainer">
+                <div class="stepper">
+                    <div class="step" id="step1">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Validating Link</div>
+                    </div>
+                    <div class="step" id="step2">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Extracting Subtitles</div>
+                    </div>
+                    <div class="step" id="step3">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">AI Notes Generation</div>
+                    </div>
+                    <div class="step" id="step4">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Formatting Output</div>
+                    </div>
+                </div>
+                <div class="loading-sub">
+                    <i data-feather="loader" class="spin"></i>
+                    <span id="loadingMessage">Processing video metadata...</span>
+                </div>
+            </section>
+
+            <!-- Results container -->
+            <section class="results-container" id="resultsContainer" style="display: none;">
+                <!-- Left Column: Video Player Card & Subtitle list -->
+                <div class="video-column">
+                    <!-- Video Card -->
+                    <div class="video-card">
+                        <div class="thumbnail-container">
+                            <img src="" alt="Thumbnail" class="thumbnail-img" id="videoThumbnail">
+                            <span class="duration-badge" id="videoDuration">--:--</span>
+                        </div>
+                        <div class="video-details">
+                            <h4 class="video-title" id="videoTitle">Video Title Loading...</h4>
+                            <div class="video-author">
+                                <i data-feather="user"></i>
+                                <span id="videoAuthor">Creator</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Searchable transcript viewer -->
+                    <div class="transcript-card">
+                        <div class="transcript-header">
+                            <h3>Interactive Transcript</h3>
+                        </div>
+                        <div class="transcript-search-wrapper">
+                            <i data-feather="search"></i>
+                            <input type="text" class="transcript-search" id="transcriptSearch" placeholder="Search transcript..." oninput="handleTranscriptSearch()">
+                        </div>
+                        <div class="transcript-scroller" id="transcriptScroller">
+                            <!-- Loaded dynamically via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: AI Generated notebook -->
+                <!-- Right Column: AI Generated notebook & Interactive Chat -->
+                <div class="notes-card">
+                    <div class="notes-header">
+                        <!-- Navigation Tab Switcher -->
+                        <div class="view-tabs">
+                            <button class="view-tab active" id="tabNotesBtn" onclick="switchRightTab('notes')">
+                                <i data-feather="file-text"></i>
+                                <span>Executive Notes</span>
+                            </button>
+                            <button class="view-tab" id="tabChatBtn" onclick="switchRightTab('chat')">
+                                <i data-feather="message-square"></i>
+                                <span>Chat with Video</span>
+                                <span class="tab-badge">AI</span>
+                            </button>
+                        </div>
+                        <div class="notes-actions">
+                            <div class="notes-engine-tag" id="engineTag">
+                                <i data-feather="cpu"></i>
+                                <span id="engineLabel">NVIDIA NIM</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm" onclick="downloadPDF()" id="downloadPdfBtn" title="Download formatted PDF report">
+                                <i data-feather="download"></i>
+                                <span>PDF</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- View 1: Rendered Markdown Body -->
+                    <div class="markdown-body tab-content-view active" id="notesMarkdown">
+                        <!-- Loaded dynamically via JavaScript -->
+                    </div>
+
+                    <!-- View 2: Interactive Temporary Chat with Video -->
+                    <div class="chat-body tab-content-view" id="chatContainer">
+                        <!-- Chat Message Thread -->
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="chat-empty-state" id="chatEmptyState">
+                                <span>Temporary Chats</span>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input Box -->
+                        <div class="chat-input-wrapper">
+                            <form id="chatForm" onsubmit="handleSendChatMessage(event)" class="chat-input-form">
+                                <input type="text" id="chatInput" placeholder="Ask a question about this video..." autocomplete="off">
+                                <button type="submit" id="chatSendBtn" class="chat-send-btn" title="Send message">
+                                    <i data-feather="send"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer Bar (MetaCleaner style) -->
+    <footer class="footer-bar">
+        <p>Developed by <a href="https://itsme-gilt.vercel.app" target="_blank" rel="noopener noreferrer">DLM</a> &bull; Angkor AI</p>
+    </footer>
+
+
+
+    <!-- Cross-Browser Data Sync & Transfer Modal -->
+    <div class="data-modal-backdrop" id="dataModalBackdrop" onclick="handleDataModalBackdropClick(event)">
+        <div class="data-modal-card" id="dataModalCard" role="dialog" aria-modal="true" aria-labelledby="dataModalTitle">
+            <!-- Header -->
+            <div class="data-modal-header">
+                <div class="modal-title-group">
+                    <div class="modal-badge-icon">
+                        <i data-feather="repeat"></i>
+                    </div>
+                    <div>
+                        <h3 id="dataModalTitle">Cross-Browser Data Sync</h3>
+                        <p class="modal-subtitle">Transfer or backup your notes and history across browsers and devices</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" onclick="closeDataModal()" title="Close dialog" aria-label="Close dialog">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+
+            <!-- Modal Tabs -->
+            <div class="modal-tabs">
+                <button class="modal-tab active" id="tabExportBtn" onclick="switchDataModalTab('export')">
+                    <i data-feather="upload-cloud"></i>
+                    <span>Export / Sync Out</span>
+                </button>
+                <button class="modal-tab" id="tabImportBtn" onclick="switchDataModalTab('import')">
+                    <i data-feather="download-cloud"></i>
+                    <span>Import / Sync In</span>
+                </button>
+            </div>
+
+            <!-- Tab 1: Export Content -->
+            <div class="modal-tab-content active" id="exportTabContent">
+                <!-- Data stats summary -->
+                <div class="data-summary-box">
+                    <div class="summary-stat">
+                        <span class="stat-num" id="exportLecturesCount">0</span>
+                        <span class="stat-label">Saved Lectures</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-stat">
+                        <span class="stat-num" id="exportDataSize">0 KB</span>
+                        <span class="stat-label">Storage Size</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-stat">
+                        <span class="stat-num" id="exportSourceLabel">This Browser</span>
+                        <span class="stat-label">Origin</span>
+                    </div>
+                </div>
+
+                <!-- Instant 6-digit sync code -->
+                <div class="sync-section-card">
+                    <div class="sync-section-head">
+                        <div class="sync-section-title">
+                            <i data-feather="zap"></i>
+                            <span>Instant 6-Digit Sync Code</span>
+                        </div>
+                        <span class="sync-tag-recommended">Fastest</span>
+                    </div>
+                    <p class="sync-desc">
+                        Generate a temporary 6-digit code. Enter it in your other browser (Chrome, Safari, Edge, Firefox, or phone) to instantly transfer all your notes.
+                    </p>
+                    
+                    <div id="syncCodeInitialArea">
+                        <button class="btn btn-primary" style="width: 100%; justify-content: center; gap: 8px; padding: 12px 18px;" onclick="generateSyncCode()" id="generateSyncBtn">
+                            <i data-feather="key"></i>
+                            <span>Generate 6-Digit Sync Code</span>
+                        </button>
+                    </div>
+
+                    <div id="syncCodeGeneratedArea" style="display: none; flex-direction: column; gap: 10px;">
+                        <div class="code-display-container">
+                            <div class="code-value" id="generatedCodeDisplay">--- ---</div>
+                            <button class="btn-copy-code" onclick="copySyncCode()" id="copySyncCodeBtn" title="Copy sync code">
+                                <i data-feather="copy" id="copyCodeIcon"></i>
+                                <span id="copyCodeText">Copy</span>
+                            </button>
+                        </div>
+                        <div class="code-timer-bar">
+                            <i data-feather="clock"></i>
+                            <span id="codeTimerCountdown">Valid for 15 minutes</span>
+                        </div>
+                        <div class="quick-steps">
+                            <strong>How to use in your other browser:</strong>
+                            <ol>
+                                <li>Open <code>http://127.0.0.1:5000/home</code> in your other browser.</li>
+                                <li>Click <strong>Sync</strong> (top navbar or sidebar) &rarr; select <strong>Import / Sync In</strong>.</li>
+                                <li>Type the 6-digit code above and click <strong>Fetch & Preview</strong>.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Offline JSON backup and clipboard -->
+                <div class="sync-section-card secondary">
+                    <div class="sync-section-head">
+                        <div class="sync-section-title">
+                            <i data-feather="file-text"></i>
+                            <span>Offline Backup & Clipboard</span>
+                        </div>
+                    </div>
+                    <p class="sync-desc">
+                        Download a standalone <code>.json</code> backup file or copy your notes database to clipboard. Works 100% offline.
+                    </p>
+                    <div class="export-actions-row">
+                        <button class="btn btn-secondary" onclick="exportDataToFile()" id="exportFileBtn">
+                            <i data-feather="download"></i>
+                            <span>Download .JSON Backup</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportDataToClipboard()" id="exportClipboardBtn">
+                            <i data-feather="clipboard"></i>
+                            <span>Copy to Clipboard</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Import Content -->
+            <div class="modal-tab-content" id="importTabContent" style="display: none;">
+                <!-- Quick 6-digit sync code input -->
+                <div class="sync-section-card">
+                    <div class="sync-section-head">
+                        <div class="sync-section-title">
+                            <i data-feather="zap"></i>
+                            <span>Load via 6-Digit Sync Code</span>
+                        </div>
+                        <span class="sync-tag-recommended">Fastest</span>
+                    </div>
+                    <p class="sync-desc">
+                        Enter the 6-digit sync code generated from your other browser:
+                    </p>
+                    <div class="code-input-row">
+                        <input type="text" id="syncCodeInput" class="sync-code-input" placeholder="e.g. 617-254" maxlength="7" autocomplete="off" oninput="formatCodeInput(this)">
+                        <button class="btn btn-primary" onclick="fetchFromSyncCode()" id="fetchSyncBtn">
+                            <i data-feather="download-cloud"></i>
+                            <span>Fetch & Preview</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Restore from File or Paste JSON -->
+                <div class="sync-section-card secondary">
+                    <div class="sync-section-head">
+                        <div class="sync-section-title">
+                            <i data-feather="file-text"></i>
+                            <span>Restore from Backup File or JSON</span>
+                        </div>
+                    </div>
+                    <div class="dropzone" id="importDropzone" onclick="triggerFileInput()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                        <i data-feather="upload-cloud" class="dropzone-icon"></i>
+                        <span class="dropzone-text">Click to choose a <strong>.json</strong> backup file, or drag & drop here</span>
+                        <input type="file" id="importFileInput" accept=".json,application/json" style="display: none;" onchange="handleFileSelected(event)">
+                    </div>
+
+                    <details class="paste-details">
+                        <summary>Or paste raw JSON data</summary>
+                        <textarea id="importPasteText" class="paste-textarea" placeholder="Paste your exported JSON here..." rows="4"></textarea>
+                        <button class="btn btn-secondary btn-sm" onclick="parsePastedJSON()" style="margin-top: 8px;">
+                            <i data-feather="check"></i>
+                            <span>Parse JSON Text</span>
+                        </button>
+                    </details>
+                </div>
+
+                <!-- Preview and Confirmation Box (Shown once data is parsed) -->
+                <div id="importPreviewArea" class="import-preview-box" style="display: none;">
+                    <div class="preview-header">
+                        <div class="preview-title">
+                            <i data-feather="check-circle" class="preview-icon"></i>
+                            <span id="previewSummaryText">Found 0 lectures to import</span>
+                        </div>
+                        <span class="preview-size-badge" id="previewSizeBadge">0 KB</span>
+                    </div>
+
+                    <!-- Strategy selector: Merge vs Replace -->
+                    <div class="import-mode-selector">
+                        <span class="import-mode-label">Import Strategy:</span>
+                        <div class="radio-options">
+                            <label class="radio-label">
+                                <input type="radio" name="importMode" value="merge" checked>
+                                <span><strong>Merge (Recommended)</strong> &mdash; keeps current lectures and adds new ones</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="importMode" value="replace">
+                                <span><strong>Replace</strong> &mdash; overwrites this browser's history with the imported data</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Items list -->
+                    <div class="preview-items-list" id="previewItemsList"></div>
+
+                    <div class="preview-actions">
+                        <button class="btn btn-primary" onclick="confirmImportData()" id="confirmImportBtn">
+                            <i data-feather="download"></i>
+                            <span>Apply & Complete Import</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="cancelImportPreview()">
+                            <span>Cancel</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast">
+        <i data-feather="info" id="toastIcon"></i>
+        <span id="toastMessage">Default toast message</span>
+    </div>
+
+    <script>
+        // Global State & History Storage
+        let configData = {};
+        let activeAnalysis = null;
+        let lectureHistory = [];
+
+        // App Initialisation
+        window.addEventListener('DOMContentLoaded', () => {
+            feather.replace();
+            loadHistoryFromStorage();
+            initializeFromURL();
+        });
+
+        // Listen for browser Back/Forward buttons
+        window.addEventListener('popstate', () => {
+            initializeFromURL();
+        });
+
+        function initializeFromURL() {
+            const path = window.location.pathname;
+            const parts = path.split('/');
+            
+            if (parts.length >= 3 && parts[1] === 'home') {
+                const lectureId = parts[2];
+                if (lectureId && lectureId !== 'new') {
+                    const foundItem = lectureHistory.find(item => item.lecture_id === lectureId);
+                    if (foundItem) {
+                        loadHistoryItem(foundItem, false);
+                    } else {
+                        // ID not found, reset to new
+                        window.history.replaceState({}, '', '/home/new');
+                        startNewLecture(false);
+                    }
+                } else if (lectureId === 'new') {
+                    startNewLecture(false);
+                }
+            } else {
+                startNewLecture(false);
+            }
+        }
+
+        // Toast Helper
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.textContent = message;
+            toast.className = 'toast show ' + type;
+            
+            // Icon customization
+            if (type === 'error') {
+                toastIcon.setAttribute('data-feather', 'alert-circle');
+            } else if (type === 'success') {
+                toastIcon.setAttribute('data-feather', 'check-circle');
+            } else {
+                toastIcon.setAttribute('data-feather', 'info');
+            }
+            feather.replace();
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+
+        // Stepper animation controller
+        function updateStepperProgress(activeStepIndex, message) {
+            document.getElementById('loadingMessage').textContent = message;
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById('step' + i);
+                if (i < activeStepIndex) {
+                    step.className = 'step completed';
+                } else if (i === activeStepIndex) {
+                    step.className = 'step active';
+                } else {
+                    step.className = 'step';
+                }
+            }
+        }
+
+        // Submits YouTube Link for Analysis
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const urlInput = e.target.querySelector('[name="youtubeUrl"]');
+            const url = urlInput.value.trim();
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            const loaderContainer = document.getElementById('loaderContainer');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const topNavSearch = document.getElementById('topNavSearch');
+            const heroSearch = document.getElementById('heroSearch');
+
+            // Form validations
+            if (!url) return;
+
+            const wasHeroSearchVisible = (heroSearch.style.display !== 'none');
+
+            // Update UI State: Hide hero, show top nav search
+            heroSearch.style.display = 'none';
+            topNavSearch.style.display = 'flex';
+            
+            // Sync URL to top nav if submitted from hero
+            if (urlInput !== topNavSearch.querySelector('[name="youtubeUrl"]')) {
+                topNavSearch.querySelector('[name="youtubeUrl"]').value = url;
+            }
+
+            // Reset results states
+            submitBtn.disabled = true;
+            resultsContainer.style.display = 'none';
+            loaderContainer.style.display = 'flex';
+            
+            updateStepperProgress(1, "Validating YouTube URL & getting video metadata...");
+
+            let progressInterval = null;
+
+            try {
+                // Step 1: Request Analysis from Flask
+                // We'll dynamically trigger the progress messages based on estimated completion times
+                progressInterval = setInterval(() => {
+                    const currentStep = document.querySelector('.step.active');
+                    if (!currentStep) return;
+                    
+                    const stepId = currentStep.id;
+                    if (stepId === 'step1') {
+                        updateStepperProgress(2, "URL is valid. Fetching lecture subtitles/transcripts...");
+                    } else if (stepId === 'step2') {
+                        updateStepperProgress(3, "Subtitles acquired. Analyzing lecture transcript with AI... This may take up to 30s.");
+                    }
+                }, 4000);
+
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: url
+                    })
+                });
+
+                if (progressInterval) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "An error occurred during video analysis.");
+                }
+
+                updateStepperProgress(4, "Formatting structured output & rendering notes...");
+                setTimeout(() => {
+                    renderAnalysisResults(data);
+                    saveToLocalStorageHistory(data);
+                    loaderContainer.style.display = 'none';
+                    resultsContainer.style.display = 'grid';
+                    submitBtn.disabled = false;
+                    showToast("Lecture analysis complete!", "success");
+                }, 800);
+
+            } catch (err) {
+                console.error(err);
+                if (progressInterval) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                }
+                loaderContainer.style.display = 'none';
+                submitBtn.disabled = false;
+
+                // Restore hero search if no results are visible
+                if (!activeAnalysis && wasHeroSearchVisible) {
+                    heroSearch.style.display = 'flex';
+                    topNavSearch.style.display = 'none';
+                }
+
+                showToast(err.message || "Failed to analyze video. Connection error.", "error");
+                
+                // Automatically refresh/reset the page if the video was refused
+                if (err.message && err.message.includes("too long")) {
+                    setTimeout(() => {
+                        startNewLecture();
+                    }, 3500);
+                }
+            }
+        }
+
+        // Format Duration (seconds to hh:mm:ss)
+        function formatDuration(sec) {
+            if (!sec) return "--:--";
+            const hrs = Math.floor(sec / 3600);
+            const mins = Math.floor((sec % 3600) / 60);
+            const secs = Math.floor(sec % 60);
+
+            if (hrs > 0) {
+                return `${hrs}:${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Render LaTeX equations in a DOM element via KaTeX
+        function renderLatexInElement(element) {
+            if (!element) return;
+            const tryRender = () => {
+                if (typeof renderMathInElement === 'function') {
+                    try {
+                        renderMathInElement(element, {
+                            delimiters: [
+                                { left: '$$', right: '$$', display: true },
+                                { left: '$', right: '$', display: false },
+                                { left: '\\(', right: '\\)', display: false },
+                                { left: '\\[', right: '\\]', display: true }
+                            ],
+                            throwOnError: false,
+                            errorColor: '#cc0000'
+                        });
+                    } catch (e) {
+                        console.warn("KaTeX render error:", e);
+                    }
+                }
+            };
+
+            if (typeof renderMathInElement === 'function') {
+                tryRender();
+            } else {
+                // If defer scripts are still loading, wait slightly
+                setTimeout(tryRender, 200);
+            }
+        }
+
+        // Render response data into results UI
+        function renderAnalysisResults(data) {
+            activeAnalysis = data;
+
+            // Render Video Details
+            const metadata = data.metadata;
+            document.getElementById('videoThumbnail').src = metadata.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=60';
+            document.getElementById('videoDuration').textContent = formatDuration(metadata.duration);
+            document.getElementById('videoTitle').textContent = metadata.title;
+            document.getElementById('videoAuthor').textContent = metadata.author;
+
+            // Render Engine Name Tag
+            document.getElementById('engineLabel').textContent = data.engine || 'Sarvam AI';
+
+            // Render AI Markdown (Sanitized against XSS)
+            const mdContainer = document.getElementById('notesMarkdown');
+            const rawMarkdown = marked.parse(data.analysis || '');
+            mdContainer.innerHTML = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawMarkdown) : rawMarkdown;
+
+            // Render LaTeX / Math via KaTeX auto-render
+            renderLatexInElement(mdContainer);
+
+            // Reset chat history and switch back to Notes view on new analysis
+            currentChatHistory = [];
+            switchRightTab('notes');
+            const chatMessagesContainer = document.getElementById('chatMessages');
+            if (chatMessagesContainer) {
+                chatMessagesContainer.innerHTML = `
+                    <div class="chat-empty-state" id="chatEmptyState">
+                        <span>Temporary Chats</span>
+                    </div>
+                `;
+            }
+
+            // Render Transcript list
+            const transcriptContainer = document.getElementById('transcriptScroller');
+            transcriptContainer.innerHTML = '';
+
+            const segments = data.transcript.segments || [];
+            if (segments.length === 0) {
+                transcriptContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px;">No transcript segments found.</div>`;
+            } else {
+                segments.forEach(seg => {
+                    const segDiv = document.createElement('div');
+                    segDiv.className = 'transcript-segment';
+                    segDiv.onclick = () => seekToTimestamp(seg.start);
+                    
+                    const timeSpan = document.createElement('span');
+                    timeSpan.className = 'timestamp';
+                    timeSpan.textContent = formatDuration(seg.start);
+
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = seg.text;
+
+                    segDiv.appendChild(timeSpan);
+                    segDiv.appendChild(textSpan);
+                    transcriptContainer.appendChild(segDiv);
+                });
+            }
+            
+            document.getElementById('transcriptSearch').value = '';
+            feather.replace();
+        }
+
+        // Open YouTube in new tab at a specific timestamp
+        function seekToTimestamp(seconds) {
+            if (!activeAnalysis) return;
+            const videoId = activeAnalysis.metadata.video_id;
+            const t = Math.floor(seconds);
+            const url = `https://www.youtube.com/watch?v=${videoId}&t=${t}s`;
+            window.open(url, '_blank');
+        }
+
+        // Search highlight inside transcript scroller
+        function handleTranscriptSearch() {
+            const query = document.getElementById('transcriptSearch').value.toLowerCase().trim();
+            const segments = document.querySelectorAll('.transcript-segment');
+
+            segments.forEach(seg => {
+                const text = seg.querySelector('span:last-child').textContent.toLowerCase();
+                if (query && text.includes(query)) {
+                    seg.classList.add('match');
+                } else {
+                    seg.classList.remove('match');
+                }
+            });
+        }
+
+        // Download analysis as styled PDF document
+        function downloadPDF() {
+            // Robust activeAnalysis recovery if opened from closed tab/history
+            if (!activeAnalysis && lectureHistory.length > 0) {
+                const pathParts = window.location.pathname.split('/');
+                if (pathParts.length >= 3 && pathParts[1] === 'home') {
+                    const currentId = pathParts[2];
+                    const matched = lectureHistory.find(item => item.lecture_id === currentId);
+                    if (matched) activeAnalysis = matched;
+                }
+                if (!activeAnalysis) activeAnalysis = lectureHistory[0];
+            }
+
+            if (!activeAnalysis) {
+                showToast("No analysis available to download.", "error");
+                return;
+            }
+
+            const metadata = activeAnalysis.metadata || {
+                title: document.getElementById('videoTitle')?.textContent || 'Executive Analysis Report',
+                author: document.getElementById('videoAuthor')?.textContent || 'Unknown Creator',
+                duration: null
+            };
+
+            const mdContainer = document.getElementById('notesMarkdown');
+            if (!mdContainer || !mdContainer.innerHTML.trim()) {
+                showToast("Notes are still generating or empty.", "error");
+                return;
+            }
+
+            let markdownContent = activeAnalysis.analysis || '';
+            if (!markdownContent.trim()) {
+                // If markdown string was somehow lost in stored history, extract text from container
+                markdownContent = mdContainer.innerText || mdContainer.textContent || '';
+            }
+
+            const downloadBtn = document.getElementById('downloadPdfBtn');
+            const originalBtnHtml = downloadBtn ? downloadBtn.innerHTML : '';
+            if (downloadBtn) {
+                downloadBtn.disabled = true;
+                downloadBtn.innerHTML = `<i data-feather="loader" class="spin"></i><span>Generating PDF...</span>`;
+                feather.replace();
+            }
+
+            showToast("Generating high-quality PDF report, please wait...", "info");
+
+            // Server-Side Python PDF Generation (ReportLab)
+            // Completely fixes broken tables, cut lines, misalignments, and excessive spacing
+            fetch('/api/generate-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    metadata: metadata,
+                    markdown: markdownContent,
+                    engine: activeAnalysis.engine || 'Angkor Executive AI'
+                })
+            })
+            .then(async (resp) => {
+                if (!resp.ok) {
+                    const errData = await resp.json().catch(() => ({}));
+                    throw new Error(errData.error || `Server returned ${resp.status}`);
+                }
+                return resp.blob();
+            })
+            .then((blob) => {
+                const cleanTitle = (metadata.title || 'report').replace(/[^a-z0-9]/gi, '_').toLowerCase().substring(0, 32);
+                const filename = `angkor_report_${cleanTitle}.pdf`;
+                const blobUrl = window.URL.createObjectURL(blob);
+                const tempLink = document.createElement('a');
+                tempLink.href = blobUrl;
+                tempLink.download = filename;
+                document.body.appendChild(tempLink);
+                tempLink.click();
+                document.body.removeChild(tempLink);
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
+                showToast("PDF report downloaded successfully!", "success");
+            })
+            .catch((err) => {
+                console.error("Server-side PDF generation failed, falling back to print:", err);
+                showToast("Generating print version...", "info");
+                window.print();
+            })
+            .finally(() => {
+                if (downloadBtn) {
+                    downloadBtn.disabled = false;
+                    downloadBtn.innerHTML = originalBtnHtml;
+                    feather.replace();
+                }
+            });
+        }
+
+        // --- Interactive Temporary Chat System ---
+        let currentChatHistory = []; // Client-isolated temporary memory (0 leak between users)
+
+        function switchRightTab(tabName) {
+            const notesTabBtn = document.getElementById('tabNotesBtn');
+            const chatTabBtn = document.getElementById('tabChatBtn');
+            const notesView = document.getElementById('notesMarkdown');
+            const chatView = document.getElementById('chatContainer');
+
+            if (tabName === 'notes') {
+                notesTabBtn.classList.add('active');
+                chatTabBtn.classList.remove('active');
+                notesView.classList.add('active');
+                chatView.classList.remove('active');
+            } else if (tabName === 'chat') {
+                chatTabBtn.classList.add('active');
+                notesTabBtn.classList.remove('active');
+                chatView.classList.add('active');
+                notesView.classList.remove('active');
+                setTimeout(() => {
+                    const chatInput = document.getElementById('chatInput');
+                    if (chatInput) chatInput.focus();
+                    scrollChatToBottom();
+                }, 100);
+            }
+            feather.replace();
+        }
+
+        function scrollChatToBottom() {
+            const container = document.getElementById('chatMessages');
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function appendChatMessage(role, content) {
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+
+            const emptyState = document.getElementById('chatEmptyState');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-message ${role}`;
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'msg-avatar';
+            avatarDiv.innerHTML = role === 'user' ? '<i data-feather="user"></i>' : '<i data-feather="cpu"></i>';
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'msg-bubble';
+
+            if (role === 'assistant') {
+                const parsed = marked.parse(content || '');
+                bubbleDiv.innerHTML = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(parsed) : parsed;
+                renderLatexInElement(bubbleDiv);
+            } else {
+                const p = document.createElement('p');
+                p.textContent = content;
+                bubbleDiv.appendChild(p);
+            }
+
+            msgDiv.appendChild(avatarDiv);
+            msgDiv.appendChild(bubbleDiv);
+            container.appendChild(msgDiv);
+            feather.replace();
+            scrollChatToBottom();
+        }
+
+        async function handleSendChatMessage(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            if (!activeAnalysis) {
+                showToast("Please analyze a video first before chatting.", "info");
+                return;
+            }
+
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('chatSendBtn');
+            const query = input.value.trim();
+            if (!query) return;
+
+            // Display user message in UI
+            appendChatMessage('user', query);
+            input.value = '';
+            input.disabled = true;
+            if (sendBtn) sendBtn.disabled = true;
+
+            // Typing indicator bubble
+            const container = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'chat-message assistant typing-indicator';
+            typingDiv.id = 'typingBubble';
+            typingDiv.innerHTML = `
+                <div class="msg-avatar"><i data-feather="cpu"></i></div>
+                <div class="msg-bubble"><span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+            `;
+            container.appendChild(typingDiv);
+            feather.replace();
+            scrollChatToBottom();
+
+            try {
+                const payload = {
+                    video_id: activeAnalysis.metadata.video_id,
+                    message: query,
+                    history: currentChatHistory,
+                    transcript_text: (activeAnalysis.transcript && activeAnalysis.transcript.text) ? activeAnalysis.transcript.text : ''
+                };
+
+                const resp = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await resp.json();
+                const typingBubble = document.getElementById('typingBubble');
+                if (typingBubble) typingBubble.remove();
+
+                if (!resp.ok) {
+                    throw new Error(data.error || 'Chat query failed.');
+                }
+
+                // Add to temporary client memory
+                currentChatHistory.push({ role: 'user', content: query });
+                currentChatHistory.push({ role: 'assistant', content: data.reply });
+
+                // Render assistant response
+                appendChatMessage('assistant', data.reply);
+
+            } catch (err) {
+                console.error("Chat error:", err);
+                const typingBubble = document.getElementById('typingBubble');
+                if (typingBubble) typingBubble.remove();
+                appendChatMessage('assistant', `⚠️ ${err.message || 'Error communicating with assistant. Please try again.'}`);
+            } finally {
+                input.disabled = false;
+                if (sendBtn) sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        // Cryptographically secure lecture ID generator
+        function generateLectureId() {
+            try {
+                const bytes = new Uint8Array(4);
+                window.crypto.getRandomValues(bytes);
+                return Array.from(bytes, b => b.toString(36).padStart(2, '0')).join('').substring(0, 5).toUpperCase();
+            } catch (e) {
+                return (Date.now().toString(36) + Math.random().toString(36).substring(2, 5)).substring(0, 5).toUpperCase();
+            }
+        }
+
+        // --- Persistent Local History Controls ---
+        function saveToLocalStorageHistory(data) {
+            try {
+                if (!data.lecture_id) {
+                    data.lecture_id = generateLectureId();
+                }
+
+                // Push new URL state
+                window.history.pushState({}, '', '/home/' + data.lecture_id);
+
+                // Ensure duplicate entries are removed
+                lectureHistory = lectureHistory.filter(item => item.metadata.video_id !== data.metadata.video_id);
+                // Prepend new item
+                lectureHistory.unshift(data);
+                
+                // Limit history to 20 items to prevent storage overflow
+                if (lectureHistory.length > 20) {
+                    lectureHistory.pop();
+                }
+                
+                try {
+                    localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
+                } catch (quotaErr) {
+                    // Quota exceeded: trim older items and retry
+                    while (lectureHistory.length > 2) {
+                        lectureHistory.pop();
+                        try {
+                            localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
+                            break;
+                        } catch (e) {}
+                    }
+                }
+                renderHistoryUI();
+            } catch (err) {
+                console.error("Local storage error:", err);
+            }
+        }
+
+        function loadHistoryFromStorage() {
+            const cached = localStorage.getItem('veda_lecture_history');
+            if (cached) {
+                try {
+                    lectureHistory = JSON.parse(cached);
+                    renderHistoryUI();
+                } catch (err) {
+                    console.error("Failed to parse cached history:", err);
+                }
+            }
+        }
+
+        function renderHistoryUI() {
+            const container = document.getElementById('historyList');
+            container.innerHTML = '';
+
+            if (lectureHistory.length === 0) {
+                container.innerHTML = `<div class="empty-history">No lecture history found. Run an analysis to see notes here.</div>`;
+                return;
+            }
+
+            lectureHistory.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'history-item';
+                if (activeAnalysis && activeAnalysis.metadata.video_id === item.metadata.video_id) {
+                    card.classList.add('active');
+                }
+
+                card.onclick = (e) => {
+                    if (e.target.closest('.delete-btn')) return;
+                    loadHistoryItem(item);
+                };
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'title';
+                titleDiv.textContent = item.metadata.title;
+
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'meta';
+                
+                const authorSpan = document.createElement('span');
+                authorSpan.textContent = item.metadata.author;
+                
+                const durSpan = document.createElement('span');
+                durSpan.textContent = formatDuration(item.metadata.duration);
+
+                metaDiv.appendChild(authorSpan);
+                metaDiv.appendChild(durSpan);
+
+                // Delete button
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-btn';
+                delBtn.innerHTML = `<i data-feather="trash-2" style="width: 12px; height: 12px;"></i>`;
+                delBtn.onclick = (e) => deleteHistoryItem(item.metadata.video_id, e);
+
+                card.appendChild(titleDiv);
+                card.appendChild(metaDiv);
+                card.appendChild(delBtn);
+                
+                container.appendChild(card);
+            });
+            feather.replace();
+        }
+
+        function loadHistoryItem(item, pushUrl = true) {
+            if (window.innerWidth <= 960) {
+                toggleSidebar(false);
+            }
+            if (pushUrl) {
+                window.history.pushState({}, '', '/home/' + (item.lecture_id || ''));
+            }
+            document.getElementById('heroSearch').style.display = 'none';
+            document.getElementById('topNavSearch').style.display = 'flex';
+            document.querySelector('#topNavSearch [name="youtubeUrl"]').value = item.metadata.url || '';
+            
+            renderAnalysisResults(item);
+            
+            // Mark active history item
+            document.querySelectorAll('.history-item').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            renderHistoryUI();
+            
+            document.getElementById('resultsContainer').style.display = 'grid';
+            document.getElementById('loaderContainer').style.display = 'none';
+        }
+
+        function deleteHistoryItem(videoId, e) {
+            e.stopPropagation();
+            lectureHistory = lectureHistory.filter(item => item.metadata.video_id !== videoId);
+            try {
+                localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
+            } catch (err) {}
+            
+            if (activeAnalysis && activeAnalysis.metadata.video_id === videoId) {
+                startNewLecture();
+            } else {
+                renderHistoryUI();
+            }
+            showToast("Lecture removed from history.", "info");
+        }
+
+        // Sidebar Toggle Logic (Supports Desktop Collapse & Mobile Off-Canvas Drawer)
+        function toggleSidebar(forceState = null) {
+            const isMobile = window.innerWidth <= 960;
+            const container = document.querySelector('.app-container');
+            const backdrop = document.getElementById('sidebarBackdrop');
+
+            if (isMobile) {
+                const willOpen = forceState !== null ? forceState : !container.classList.contains('mobile-sidebar-open');
+                if (willOpen) {
+                    container.classList.add('mobile-sidebar-open');
+                    if (backdrop) backdrop.classList.add('active');
+                } else {
+                    container.classList.remove('mobile-sidebar-open');
+                    if (backdrop) backdrop.classList.remove('active');
+                }
+            } else {
+                const isCollapsed = forceState !== null ? !forceState : container.classList.toggle('collapsed-sidebar');
+                localStorage.setItem('veda_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+            }
+        }
+
+        // Initialize sidebar state on load
+        if (window.innerWidth > 960 && localStorage.getItem('veda_sidebar_collapsed') === 'true') {
+            document.querySelector('.app-container').classList.add('collapsed-sidebar');
+        }
+
+        // Close sidebar on mobile when tapping outside (backdrop or anywhere outside drawer)
+        const sidebarBackdropEl = document.getElementById('sidebarBackdrop');
+        if (sidebarBackdropEl) {
+            const handleBackdropClose = (e) => {
+                e.preventDefault();
+                toggleSidebar(false);
+            };
+            sidebarBackdropEl.addEventListener('click', handleBackdropClose);
+            sidebarBackdropEl.addEventListener('touchend', handleBackdropClose, { passive: false });
+        }
+
+        document.addEventListener('pointerdown', (e) => {
+            if (window.innerWidth <= 960) {
+                const container = document.querySelector('.app-container');
+                const sidebar = document.getElementById('sidebarDrawer');
+                const toggleBtn = document.getElementById('sidebarToggleBtn');
+                if (container && container.classList.contains('mobile-sidebar-open')) {
+                    if (sidebar && !sidebar.contains(e.target) && (!toggleBtn || !toggleBtn.contains(e.target))) {
+                        toggleSidebar(false);
+                    }
+                }
+            }
+        });
+
+        // Handle viewport resize to reset mobile drawer
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 960) {
+                const container = document.querySelector('.app-container');
+                const backdrop = document.getElementById('sidebarBackdrop');
+                container.classList.remove('mobile-sidebar-open');
+                if (backdrop) backdrop.classList.remove('active');
+            }
+        });
+
+        // Reset workspace for a new lecture
+        function startNewLecture(pushUrl = true) {
+            if (window.innerWidth <= 960) {
+                toggleSidebar(false);
+            }
+            if (pushUrl) {
+                window.history.pushState({}, '', '/home/new');
+            }
+            activeAnalysis = null;
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('loaderContainer').style.display = 'none';
+            
+            // Show hero search, hide top nav search
+            document.getElementById('heroSearch').style.display = 'flex';
+            document.getElementById('topNavSearch').style.display = 'none';
+            
+            // Clear inputs
+            document.querySelectorAll('[name="youtubeUrl"]').forEach(input => input.value = '');
+            
+            // Remove active selection from history
+            document.querySelectorAll('.history-item').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Focus the hero search input box
+            document.querySelector('#heroSearch [name="youtubeUrl"]').focus();
+        }
+
+        // =====================================================================
+        // Cross-Browser Data Sync & Transfer System (Import & Export)
+        // =====================================================================
+        let currentSyncCode = null;
+        let syncTimerInterval = null;
+        let pendingImportData = null;
+
+        function openDataModal(initialTab = 'export') {
+            updateDataSummary();
+            switchDataModalTab(initialTab);
+            const backdrop = document.getElementById('dataModalBackdrop');
+            if (backdrop) {
+                backdrop.style.display = 'flex';
+                // Trigger transition
+                setTimeout(() => {
+                    backdrop.classList.add('show');
+                }, 10);
+            }
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+        }
+
+        function closeDataModal() {
+            const backdrop = document.getElementById('dataModalBackdrop');
+            if (backdrop) {
+                backdrop.classList.remove('show');
+                setTimeout(() => {
+                    backdrop.style.display = 'none';
+                }, 220);
+            }
+            if (syncTimerInterval) {
+                clearInterval(syncTimerInterval);
+                syncTimerInterval = null;
+            }
+            cancelImportPreview();
+        }
+
+        function handleDataModalBackdropClick(e) {
+            if (e.target && e.target.id === 'dataModalBackdrop') {
+                closeDataModal();
+            }
+        }
+
+        function switchDataModalTab(tab) {
+            const tabExportBtn = document.getElementById('tabExportBtn');
+            const tabImportBtn = document.getElementById('tabImportBtn');
+            const exportTabContent = document.getElementById('exportTabContent');
+            const importTabContent = document.getElementById('importTabContent');
+
+            if (tab === 'export') {
+                tabExportBtn.classList.add('active');
+                tabImportBtn.classList.remove('active');
+                exportTabContent.style.display = 'flex';
+                importTabContent.style.display = 'none';
+                updateDataSummary();
+            } else {
+                tabExportBtn.classList.remove('active');
+                tabImportBtn.classList.add('active');
+                exportTabContent.style.display = 'none';
+                importTabContent.style.display = 'flex';
+            }
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function updateDataSummary() {
+            const countEl = document.getElementById('exportLecturesCount');
+            const sizeEl = document.getElementById('exportDataSize');
+            const sourceEl = document.getElementById('exportSourceLabel');
+
+            const count = (lectureHistory || []).length;
+            const rawJson = JSON.stringify(lectureHistory || []);
+            const sizeInBytes = new Blob([rawJson]).size;
+
+            if (countEl) countEl.textContent = count;
+            if (sizeEl) sizeEl.textContent = formatBytes(sizeInBytes);
+            if (sourceEl) {
+                const userAgent = navigator.userAgent;
+                let browser = 'Browser';
+                if (userAgent.indexOf("Firefox") > -1) browser = 'Firefox';
+                else if (userAgent.indexOf("SamsungBrowser") > -1) browser = 'Samsung';
+                else if (userAgent.indexOf("Opera") > -1 || userAgent.indexOf("OPR") > -1) browser = 'Opera';
+                else if (userAgent.indexOf("Edge") > -1 || userAgent.indexOf("Edg") > -1) browser = 'Edge';
+                else if (userAgent.indexOf("Chrome") > -1) browser = 'Chrome';
+                else if (userAgent.indexOf("Safari") > -1) browser = 'Safari';
+                sourceEl.textContent = browser;
+            }
+        }
+
+        // --- Export Feature 1: Cloud 6-Digit Sync Code ---
+        async function generateSyncCode() {
+            if (!lectureHistory || lectureHistory.length === 0) {
+                showToast("No lecture notes saved yet. Analyze a lecture first!", "info");
+                return;
+            }
+
+            const btn = document.getElementById('generateSyncBtn');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i data-feather="loader" class="spin"></i> <span>Generating Sync Code...</span>`;
+            if (typeof feather !== 'undefined') feather.replace();
+
+            const payload = {
+                version: "1.0",
+                exported_at: new Date().toISOString(),
+                platform: "Angkor AI",
+                history: lectureHistory
+            };
+
+            try {
+                const res = await fetch('/api/sync/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payload: payload })
+                });
+
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.error || "Failed to create sync code");
+                }
+
+                currentSyncCode = data.code;
+                document.getElementById('generatedCodeDisplay').textContent = data.code;
+                document.getElementById('syncCodeInitialArea').style.display = 'none';
+                const genArea = document.getElementById('syncCodeGeneratedArea');
+                genArea.style.display = 'flex';
+
+                // Setup countdown timer (15 minutes)
+                let remaining = data.expires_in_seconds || 900;
+                const countdownEl = document.getElementById('codeTimerCountdown');
+
+                if (syncTimerInterval) clearInterval(syncTimerInterval);
+                syncTimerInterval = setInterval(() => {
+                    remaining--;
+                    if (remaining <= 0) {
+                        clearInterval(syncTimerInterval);
+                        countdownEl.textContent = 'Code expired. Generate a new one.';
+                        currentSyncCode = null;
+                    } else {
+                        const m = Math.floor(remaining / 60);
+                        const s = remaining % 60;
+                        countdownEl.textContent = `Valid for ${m}:${s < 10 ? '0' : ''}${s}`;
+                    }
+                }, 1000);
+
+                showToast("Sync code generated! Enter it on your other browser.", "success");
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || "Could not generate sync code. Check network.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                if (typeof feather !== 'undefined') feather.replace();
+            }
+        }
+
+        function copySyncCode() {
+            if (!currentSyncCode) return;
+            navigator.clipboard.writeText(currentSyncCode).then(() => {
+                const textEl = document.getElementById('copyCodeText');
+                const iconEl = document.getElementById('copyCodeIcon');
+                if (textEl) textEl.textContent = 'Copied!';
+                if (iconEl) iconEl.setAttribute('data-feather', 'check');
+                if (typeof feather !== 'undefined') feather.replace();
+                showToast("Sync code copied to clipboard!", "success");
+
+                setTimeout(() => {
+                    if (textEl) textEl.textContent = 'Copy';
+                    if (iconEl) iconEl.setAttribute('data-feather', 'copy');
+                    if (typeof feather !== 'undefined') feather.replace();
+                }, 2000);
+            }).catch(() => {
+                showToast("Please copy code manually: " + currentSyncCode, "info");
+            });
+        }
+
+        // --- Export Feature 2: Standalone .JSON file download & Clipboard ---
+        function exportDataToFile() {
+            if (!lectureHistory || lectureHistory.length === 0) {
+                showToast("No lecture notes saved yet to export.", "info");
+                return;
+            }
+
+            const exportObj = {
+                app: "Angkor AI",
+                version: "1.0",
+                exported_at: new Date().toISOString(),
+                total_lectures: lectureHistory.length,
+                history: lectureHistory
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+            const dlAnchor = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `angkor_ai_backup_${dateStr}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+
+            showToast("Backup file downloaded successfully!", "success");
+        }
+
+        function exportDataToClipboard() {
+            if (!lectureHistory || lectureHistory.length === 0) {
+                showToast("No lecture notes saved yet to copy.", "info");
+                return;
+            }
+
+            const exportObj = {
+                app: "Angkor AI",
+                version: "1.0",
+                exported_at: new Date().toISOString(),
+                total_lectures: lectureHistory.length,
+                history: lectureHistory
+            };
+
+            const jsonStr = JSON.stringify(exportObj, null, 2);
+            navigator.clipboard.writeText(jsonStr).then(() => {
+                showToast("All lecture notes copied to clipboard as JSON!", "success");
+            }).catch(() => {
+                showToast("Clipboard access denied. Try downloading file instead.", "error");
+            });
+        }
+
+        // --- Import Feature 1: Load via 6-digit Sync Code ---
+        function formatCodeInput(input) {
+            let val = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+            if (val.length > 3) {
+                val = val.slice(0, 3) + '-' + val.slice(3, 6);
+            }
+            input.value = val;
+        }
+
+        async function fetchFromSyncCode() {
+            const input = document.getElementById('syncCodeInput');
+            const rawCode = (input.value || '').replace(/[^a-zA-Z0-9]/g, '');
+
+            if (!rawCode || rawCode.length < 5) {
+                showToast("Please enter a valid 6-digit sync code.", "error");
+                return;
+            }
+
+            const btn = document.getElementById('fetchSyncBtn');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i data-feather="loader" class="spin"></i> <span>Fetching...</span>`;
+            if (typeof feather !== 'undefined') feather.replace();
+
+            try {
+                const res = await fetch(`/api/sync/fetch?code=${encodeURIComponent(rawCode)}`);
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.error || "Sync code invalid or expired.");
+                }
+
+                showToast("Data retrieved from sync code!", "success");
+                showImportPreview(data.payload);
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || "Failed to fetch data with this code.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                if (typeof feather !== 'undefined') feather.replace();
+            }
+        }
+
+        // --- Import Feature 2: Dropzone & File upload ---
+        function triggerFileInput() {
+            const fileInput = document.getElementById('importFileInput');
+            if (fileInput) fileInput.click();
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const dz = document.getElementById('importDropzone');
+            if (dz) dz.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            const dz = document.getElementById('importDropzone');
+            if (dz) dz.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dz = document.getElementById('importDropzone');
+            if (dz) dz.classList.remove('dragover');
+
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                readBackupFile(e.dataTransfer.files[0]);
+            }
+        }
+
+        function handleFileSelected(e) {
+            if (e.target.files && e.target.files.length > 0) {
+                readBackupFile(e.target.files[0]);
+            }
+        }
+
+        function readBackupFile(file) {
+            if (!file.name.endsWith('.json') && file.type && !file.type.includes('json')) {
+                showToast("Please select a valid .json backup file.", "error");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const parsed = JSON.parse(event.target.result);
+                    showImportPreview(parsed);
+                } catch (err) {
+                    console.error("JSON parse error:", err);
+                    showToast("Failed to parse JSON file. Ensure it is a valid backup.", "error");
+                }
+            };
+            reader.onerror = () => {
+                showToast("Error reading file from disk.", "error");
+            };
+            reader.readAsText(file);
+        }
+
+        function parsePastedJSON() {
+            const textEl = document.getElementById('importPasteText');
+            const text = (textEl.value || '').trim();
+            if (!text) {
+                showToast("Please paste backup JSON into the box first.", "info");
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(text);
+                showImportPreview(parsed);
+            } catch (err) {
+                showToast("Invalid JSON syntax: " + err.message, "error");
+            }
+        }
+
+        // --- Import Preview & Validation ---
+        function showImportPreview(incomingData) {
+            let items = [];
+
+            if (Array.isArray(incomingData)) {
+                items = incomingData;
+            } else if (incomingData && Array.isArray(incomingData.history)) {
+                items = incomingData.history;
+            } else if (incomingData && typeof incomingData === 'object' && incomingData.metadata) {
+                items = [incomingData];
+            }
+
+            // Filter for valid items
+            const validItems = items.filter(item => item && (item.metadata || item.analysis));
+
+            if (validItems.length === 0) {
+                showToast("No valid lecture records found in the provided data.", "error");
+                return;
+            }
+
+            pendingImportData = validItems;
+
+            const previewArea = document.getElementById('importPreviewArea');
+            const summaryText = document.getElementById('previewSummaryText');
+            const sizeBadge = document.getElementById('previewSizeBadge');
+            const listContainer = document.getElementById('previewItemsList');
+
+            summaryText.textContent = `Found ${validItems.length} lecture${validItems.length === 1 ? '' : 's'} to import`;
+            const sizeBytes = new Blob([JSON.stringify(validItems)]).size;
+            sizeBadge.textContent = formatBytes(sizeBytes);
+
+            listContainer.innerHTML = '';
+            validItems.forEach((it, idx) => {
+                const title = (it.metadata && it.metadata.title) || it.title || `Lecture #${idx + 1}`;
+                const author = (it.metadata && it.metadata.author) || 'Video Notes';
+                const dur = (it.metadata && it.metadata.duration) ? formatDuration(it.metadata.duration) : '';
+
+                const row = document.createElement('div');
+                row.className = 'preview-item';
+
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'preview-item-title';
+                titleSpan.textContent = title;
+
+                const metaSpan = document.createElement('span');
+                metaSpan.className = 'preview-item-meta';
+                metaSpan.textContent = `${author}${dur ? ' • ' + dur : ''}`;
+
+                row.appendChild(titleSpan);
+                row.appendChild(metaSpan);
+                listContainer.appendChild(row);
+            });
+
+            previewArea.style.display = 'flex';
+            previewArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (typeof feather !== 'undefined') feather.replace();
+        }
+
+        function cancelImportPreview() {
+            const previewArea = document.getElementById('importPreviewArea');
+            if (previewArea) previewArea.style.display = 'none';
+            pendingImportData = null;
+        }
+
+        function confirmImportData() {
+            if (!pendingImportData || pendingImportData.length === 0) {
+                showToast("No pending data to import.", "info");
+                return;
+            }
+
+            const modeRadio = document.querySelector('input[name="importMode"]:checked');
+            const mode = modeRadio ? modeRadio.value : 'merge';
+
+            const incoming = pendingImportData.map(item => {
+                if (!item.lecture_id) {
+                    item.lecture_id = generateLectureId();
+                }
+                if (!item.metadata) {
+                    item.metadata = {
+                        title: item.title || 'Imported Lecture',
+                        author: item.author || 'Unknown',
+                        duration: null,
+                        video_id: item.video_id || generateLectureId()
+                    };
+                }
+                return item;
+            });
+
+            if (mode === 'replace') {
+                lectureHistory = incoming.slice(0, 30);
+            } else {
+                // Merge: Keep existing, update/add incoming without duplicating video_id
+                const incomingIds = new Set(incoming.map(it => it.metadata.video_id).filter(Boolean));
+                const filteredExisting = lectureHistory.filter(it => !it.metadata.video_id || !incomingIds.has(it.metadata.video_id));
+                lectureHistory = [...incoming, ...filteredExisting].slice(0, 30);
+            }
+
+            try {
+                localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
+            } catch (err) {
+                console.warn("Storage quota trimmed on import:", err);
+                // If quota exceeded, trim to 10 items
+                lectureHistory = lectureHistory.slice(0, 10);
+                try {
+                    localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
+                } catch (e) {}
+            }
+
+            // Update UI
+            renderHistoryUI();
+            updateDataSummary();
+            closeDataModal();
+            showToast(`Successfully imported ${incoming.length} lecture notes!`, "success");
+
+            // If on empty state or no active note is loaded, load the latest imported note
+            if (!activeAnalysis && lectureHistory.length > 0) {
+                loadHistoryItem(lectureHistory[0]);
+            }
+        }
+    </script>
+</body>
+</html>
