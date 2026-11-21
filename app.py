@@ -6,7 +6,7 @@ from collections import defaultdict
 from threading import Lock
 from urllib.parse import urlparse, parse_qs, quote_plus
 import requests
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
 from dotenv import load_dotenv
 
 # Modular service imports
@@ -241,7 +241,7 @@ def home(lecture_id=None):
 
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    return redirect(url_for('home'))
 
 
 @app.route('/api/generate-pdf', methods=['POST'])
@@ -511,11 +511,15 @@ def vercel_entrypoint():
             return chat()
         elif 'markdown' in data:
             return generate_pdf()
-        elif 'payload' in data and data.get('sync_action') == 'create':
+        elif 'payload' in data or data.get('sync_action') == 'create':
             return create_sync_code()
-        elif 'code' in data and data.get('sync_action') == 'fetch':
+        elif 'code' in data or data.get('sync_action') == 'fetch':
             return fetch_sync_code()
         return jsonify({'error': 'Unrecognized request payload'}), 400
+
+    if request.args.get('code'):
+        return fetch_sync_code()
+
     return render_template('index.html')
 
 

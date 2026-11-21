@@ -66,10 +66,6 @@
             </div>
 
             <div class="navbar-right">
-                <nav class="nav-links">
-                    <a href="/home" class="nav-link active">Home</a>
-                    <a href="/about" class="nav-link">About</a>
-                </nav>
                 <div class="nav-actions">
                     <button class="nav-settings-btn" onclick="openSettingsModal()" title="Settings & Data Vault" aria-label="Settings">
                         <i data-feather="settings"></i>
@@ -1455,7 +1451,7 @@
                 const res = await fetch('/api/sync/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ payload: payload })
+                    body: JSON.stringify({ payload: payload, sync_action: 'create' })
                 });
 
                 const data = await res.json();
@@ -1759,7 +1755,7 @@
             if (typeof feather !== 'undefined') feather.replace();
 
             try {
-                const res = await fetch(`/api/sync/fetch?code=${encodeURIComponent(rawCode)}`);
+                const res = await fetch(`/api/sync/fetch?code=${encodeURIComponent(rawCode)}&sync_action=fetch`);
                 const data = await res.json();
 
                 if (!res.ok || !data.success) {
