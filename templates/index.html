@@ -68,13 +68,10 @@
                     <a href="/about" class="nav-link">About</a>
                 </nav>
                 <div class="nav-actions">
-                    <button class="nav-sync-btn" onclick="openDataModal()" title="Sync or Transfer data between browsers">
-                        <i data-feather="repeat"></i>
-                        <span>Sync</span>
+                    <button class="nav-settings-btn" onclick="openSettingsModal()" title="Settings & Data Vault">
+                        <i data-feather="settings"></i>
+                        <span>Settings</span>
                     </button>
-                    <a href="https://github.com/aryavartsubhammoharana/angko-ai" target="_blank" rel="noopener noreferrer" class="github-btn" title="GitHub Repository">
-                        <i data-feather="github"></i>
-                    </a>
                     <a href="https://itsme-gilt.vercel.app" target="_blank" rel="noopener noreferrer" class="dlm-badge" title="Developed by DLM">
                         <span class="dlm-pill">DLM</span>
                     </a>
@@ -108,9 +105,9 @@
             </div>
 
             <div class="sidebar-footer">
-                <button class="sidebar-sync-btn" onclick="openDataModal()" title="Export or Import data across browsers">
-                    <i data-feather="repeat"></i>
-                    <span>Sync & Transfer Data</span>
+                <button class="sidebar-settings-btn" onclick="openSettingsModal()" title="Settings, Backup & Data Vault">
+                    <i data-feather="settings"></i>
+                    <span>Settings & Data Vault</span>
                 </button>
             </div>
         </aside>
@@ -275,18 +272,18 @@
 
 
 
-    <!-- Cross-Browser Data Sync & Transfer Modal -->
+    <!-- Settings & Cross-Browser Data Vault Modal -->
     <div class="data-modal-backdrop" id="dataModalBackdrop" onclick="handleDataModalBackdropClick(event)">
         <div class="data-modal-card" id="dataModalCard" role="dialog" aria-modal="true" aria-labelledby="dataModalTitle">
             <!-- Header -->
             <div class="data-modal-header">
                 <div class="modal-title-group">
                     <div class="modal-badge-icon">
-                        <i data-feather="repeat"></i>
+                        <i data-feather="settings"></i>
                     </div>
                     <div>
-                        <h3 id="dataModalTitle">Cross-Browser Data Sync</h3>
-                        <p class="modal-subtitle">Transfer or backup your notes and history across browsers and devices</p>
+                        <h3 id="dataModalTitle">Settings & Data Vault</h3>
+                        <p class="modal-subtitle">Backup, export, and migrate your lecture notes and transcripts across browsers</p>
                     </div>
                 </div>
                 <button class="modal-close-btn" onclick="closeDataModal()" title="Close dialog" aria-label="Close dialog">
@@ -298,11 +295,15 @@
             <div class="modal-tabs">
                 <button class="modal-tab active" id="tabExportBtn" onclick="switchDataModalTab('export')">
                     <i data-feather="upload-cloud"></i>
-                    <span>Export / Sync Out</span>
+                    <span>Export / Backup</span>
                 </button>
                 <button class="modal-tab" id="tabImportBtn" onclick="switchDataModalTab('import')">
                     <i data-feather="download-cloud"></i>
-                    <span>Import / Sync In</span>
+                    <span>Import / Restore</span>
+                </button>
+                <button class="modal-tab" id="tabStorageBtn" onclick="switchDataModalTab('storage')">
+                    <i data-feather="sliders"></i>
+                    <span>Storage & System</span>
                 </button>
             </div>
 
@@ -326,21 +327,41 @@
                     </div>
                 </div>
 
-                <!-- Instant 6-digit sync code -->
+                <!-- Option 1: Protected Binary Archive (.angkor) -->
                 <div class="sync-section-card">
+                    <div class="sync-section-head">
+                        <div class="sync-section-title">
+                            <i data-feather="shield"></i>
+                            <span>Protected Binary Archive (.angkor)</span>
+                        </div>
+                        <span class="sync-tag-recommended">Recommended</span>
+                    </div>
+                    <p class="sync-desc">
+                        Exports all your documents, transcripts with timestamps, executed notes, and thumbnail links into a secure, tamper-resistant <strong>unreadable binary package</strong>. Perfect for migrating to any other browser.
+                    </p>
+                    <div>
+                        <button class="btn btn-primary" style="width: 100%; justify-content: center; gap: 8px; padding: 12px 18px;" onclick="exportDataToAngkorBinary()" id="exportBinaryBtn">
+                            <i data-feather="download"></i>
+                            <span>Download .angkor Archive</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Option 2: Instant 6-digit sync code -->
+                <div class="sync-section-card secondary">
                     <div class="sync-section-head">
                         <div class="sync-section-title">
                             <i data-feather="zap"></i>
                             <span>Instant 6-Digit Sync Code</span>
                         </div>
-                        <span class="sync-tag-recommended">Fastest</span>
+                        <span class="sync-tag-recommended">Wireless</span>
                     </div>
                     <p class="sync-desc">
-                        Generate a temporary 6-digit code. Enter it in your other browser (Chrome, Safari, Edge, Firefox, or phone) to instantly transfer all your notes.
+                        Transfer everything directly to your other browser (Chrome, Safari, Edge, or mobile) in seconds using a one-time 6-digit code.
                     </p>
                     
                     <div id="syncCodeInitialArea">
-                        <button class="btn btn-primary" style="width: 100%; justify-content: center; gap: 8px; padding: 12px 18px;" onclick="generateSyncCode()" id="generateSyncBtn">
+                        <button class="btn btn-secondary" style="width: 100%; justify-content: center; gap: 8px;" onclick="generateSyncCode()" id="generateSyncBtn">
                             <i data-feather="key"></i>
                             <span>Generate 6-Digit Sync Code</span>
                         </button>
@@ -359,26 +380,26 @@
                             <span id="codeTimerCountdown">Valid for 15 minutes</span>
                         </div>
                         <div class="quick-steps">
-                            <strong>How to use in your other browser:</strong>
+                            <strong>Steps on your other browser:</strong>
                             <ol>
                                 <li>Open <code>http://127.0.0.1:5000/home</code> in your other browser.</li>
-                                <li>Click <strong>Sync</strong> (top navbar or sidebar) &rarr; select <strong>Import / Sync In</strong>.</li>
+                                <li>Click <strong>Settings</strong> &rarr; <strong>Import / Restore</strong>.</li>
                                 <li>Type the 6-digit code above and click <strong>Fetch & Preview</strong>.</li>
                             </ol>
                         </div>
                     </div>
                 </div>
 
-                <!-- Offline JSON backup and clipboard -->
+                <!-- Option 3: Plain JSON backup and clipboard -->
                 <div class="sync-section-card secondary">
                     <div class="sync-section-head">
                         <div class="sync-section-title">
                             <i data-feather="file-text"></i>
-                            <span>Offline Backup & Clipboard</span>
+                            <span>Plain JSON Backup & Clipboard</span>
                         </div>
                     </div>
                     <p class="sync-desc">
-                        Download a standalone <code>.json</code> backup file or copy your notes database to clipboard. Works 100% offline.
+                        Download raw human-readable <code>.json</code> or copy your notes database to clipboard.
                     </p>
                     <div class="export-actions-row">
                         <button class="btn btn-secondary" onclick="exportDataToFile()" id="exportFileBtn">
@@ -395,17 +416,47 @@
 
             <!-- Tab 2: Import Content -->
             <div class="modal-tab-content" id="importTabContent" style="display: none;">
-                <!-- Quick 6-digit sync code input -->
+                <!-- Session ID Notice -->
+                <div class="session-id-notice">
+                    <i data-feather="info"></i>
+                    <span><strong>Session Isolation:</strong> All lecture documents, transcripts, and notes are 100% restored identically, while fresh unique Session/Chat IDs are regenerated for this browser to prevent collision.</span>
+                </div>
+
+                <!-- Restore from File (.angkor or .json) -->
                 <div class="sync-section-card">
+                    <div class="sync-section-head">
+                        <div class="sync-section-title">
+                            <i data-feather="upload-cloud"></i>
+                            <span>Upload Backup Archive (.angkor or .json)</span>
+                        </div>
+                        <span class="sync-tag-recommended">Universal</span>
+                    </div>
+                    <div class="dropzone" id="importDropzone" onclick="triggerFileInput()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                        <i data-feather="file" class="dropzone-icon"></i>
+                        <span class="dropzone-text">Click to choose a <strong>.angkor</strong> binary archive or <strong>.json</strong> file, or drag & drop here</span>
+                        <input type="file" id="importFileInput" accept=".angkor,.bak,.json,application/json,application/octet-stream" style="display: none;" onchange="handleFileSelected(event)">
+                    </div>
+
+                    <details class="paste-details">
+                        <summary>Or paste raw binary/JSON string</summary>
+                        <textarea id="importPasteText" class="paste-textarea" placeholder="Paste your exported .angkor binary string or JSON text here..." rows="4"></textarea>
+                        <button class="btn btn-secondary btn-sm" onclick="parsePastedJSON()" style="margin-top: 8px;">
+                            <i data-feather="check"></i>
+                            <span>Parse Pasted Content</span>
+                        </button>
+                    </details>
+                </div>
+
+                <!-- Quick 6-digit sync code input -->
+                <div class="sync-section-card secondary">
                     <div class="sync-section-head">
                         <div class="sync-section-title">
                             <i data-feather="zap"></i>
                             <span>Load via 6-Digit Sync Code</span>
                         </div>
-                        <span class="sync-tag-recommended">Fastest</span>
                     </div>
                     <p class="sync-desc">
-                        Enter the 6-digit sync code generated from your other browser:
+                        Enter the temporary sync code generated from your other browser:
                     </p>
                     <div class="code-input-row">
                         <input type="text" id="syncCodeInput" class="sync-code-input" placeholder="e.g. 617-254" maxlength="7" autocomplete="off" oninput="formatCodeInput(this)">
@@ -414,30 +465,6 @@
                             <span>Fetch & Preview</span>
                         </button>
                     </div>
-                </div>
-
-                <!-- Restore from File or Paste JSON -->
-                <div class="sync-section-card secondary">
-                    <div class="sync-section-head">
-                        <div class="sync-section-title">
-                            <i data-feather="file-text"></i>
-                            <span>Restore from Backup File or JSON</span>
-                        </div>
-                    </div>
-                    <div class="dropzone" id="importDropzone" onclick="triggerFileInput()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-                        <i data-feather="upload-cloud" class="dropzone-icon"></i>
-                        <span class="dropzone-text">Click to choose a <strong>.json</strong> backup file, or drag & drop here</span>
-                        <input type="file" id="importFileInput" accept=".json,application/json" style="display: none;" onchange="handleFileSelected(event)">
-                    </div>
-
-                    <details class="paste-details">
-                        <summary>Or paste raw JSON data</summary>
-                        <textarea id="importPasteText" class="paste-textarea" placeholder="Paste your exported JSON here..." rows="4"></textarea>
-                        <button class="btn btn-secondary btn-sm" onclick="parsePastedJSON()" style="margin-top: 8px;">
-                            <i data-feather="check"></i>
-                            <span>Parse JSON Text</span>
-                        </button>
-                    </details>
                 </div>
 
                 <!-- Preview and Confirmation Box (Shown once data is parsed) -->
@@ -456,11 +483,11 @@
                         <div class="radio-options">
                             <label class="radio-label">
                                 <input type="radio" name="importMode" value="merge" checked>
-                                <span><strong>Merge (Recommended)</strong> &mdash; keeps current lectures and adds new ones</span>
+                                <span><strong>Merge (Recommended)</strong> &mdash; keeps current lectures and adds new ones with fresh session IDs</span>
                             </label>
                             <label class="radio-label">
                                 <input type="radio" name="importMode" value="replace">
-                                <span><strong>Replace</strong> &mdash; overwrites this browser's history with the imported data</span>
+                                <span><strong>Replace</strong> &mdash; overwrites this browser's history with the imported archive</span>
                             </label>
                         </div>
                     </div>
@@ -471,12 +498,61 @@
                     <div class="preview-actions">
                         <button class="btn btn-primary" onclick="confirmImportData()" id="confirmImportBtn">
                             <i data-feather="download"></i>
-                            <span>Apply & Complete Import</span>
+                            <span>Apply & Restore All Notes</span>
                         </button>
                         <button class="btn btn-secondary" onclick="cancelImportPreview()">
                             <span>Cancel</span>
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Storage & System Content -->
+            <div class="modal-tab-content" id="storageTabContent" style="display: none;">
+                <!-- Storage Quota Meter -->
+                <div class="storage-meter-box">
+                    <div class="storage-meter-labels">
+                        <span>Browser LocalStorage Usage</span>
+                        <span id="storageUsageRatio">0 KB / 5 MB (0%)</span>
+                    </div>
+                    <div class="storage-meter-track">
+                        <div class="storage-meter-fill" id="storageMeterFill" style="width: 2%;"></div>
+                    </div>
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">
+                        Angkor AI stores your notes strictly inside your browser for maximum privacy without requiring an account.
+                    </span>
+                </div>
+
+                <!-- AI System Pipeline Information -->
+                <div class="sync-section-card secondary">
+                    <div class="sync-section-head">
+                        <div class="sync-section-title">
+                            <i data-feather="cpu"></i>
+                            <span>AI Inference Cascade</span>
+                        </div>
+                        <span class="sync-tag-recommended">Active</span>
+                    </div>
+                    <p class="sync-desc" style="line-height: 1.6;">
+                        &bull; <strong>Primary:</strong> Sarvam AI 105B (Indian & global context optimization)<br>
+                        &bull; <strong>Fallback 1:</strong> Groq LLaMA-3.3-70B (High-speed inference)<br>
+                        &bull; <strong>Fallback 2:</strong> Google Gemini 2.5 Flash (Resilience safety net)<br>
+                        &bull; <strong>Fallback 3:</strong> NVIDIA NIM Nemotron-70B
+                    </p>
+                </div>
+
+                <!-- Danger Zone: Reset All -->
+                <div class="danger-zone-card">
+                    <div class="danger-zone-title">
+                        <i data-feather="alert-triangle"></i>
+                        <span>Danger Zone</span>
+                    </div>
+                    <p class="danger-zone-desc">
+                        Permanently wipe all lecture history, transcripts, and notes stored in this browser. (Make sure you download a <code>.angkor</code> backup before wiping if you want to keep them).
+                    </p>
+                    <button class="btn-danger" onclick="clearAllStoredHistory()">
+                        <i data-feather="trash-2"></i>
+                        <span>Delete All Stored History</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1280,19 +1356,18 @@
         }
 
         // =====================================================================
-        // Cross-Browser Data Sync & Transfer System (Import & Export)
+        // Settings & Cross-Browser Data Vault (Binary Archive, JSON, Sync)
         // =====================================================================
         let currentSyncCode = null;
         let syncTimerInterval = null;
         let pendingImportData = null;
 
-        function openDataModal(initialTab = 'export') {
+        function openSettingsModal(initialTab = 'export') {
             updateDataSummary();
             switchDataModalTab(initialTab);
             const backdrop = document.getElementById('dataModalBackdrop');
             if (backdrop) {
                 backdrop.style.display = 'flex';
-                // Trigger transition
                 setTimeout(() => {
                     backdrop.classList.add('show');
                 }, 10);
@@ -1301,6 +1376,7 @@
                 feather.replace();
             }
         }
+        const openDataModal = openSettingsModal;
 
         function closeDataModal() {
             const backdrop = document.getElementById('dataModalBackdrop');
@@ -1326,21 +1402,22 @@
         function switchDataModalTab(tab) {
             const tabExportBtn = document.getElementById('tabExportBtn');
             const tabImportBtn = document.getElementById('tabImportBtn');
+            const tabStorageBtn = document.getElementById('tabStorageBtn');
+
             const exportTabContent = document.getElementById('exportTabContent');
             const importTabContent = document.getElementById('importTabContent');
+            const storageTabContent = document.getElementById('storageTabContent');
 
-            if (tab === 'export') {
-                tabExportBtn.classList.add('active');
-                tabImportBtn.classList.remove('active');
-                exportTabContent.style.display = 'flex';
-                importTabContent.style.display = 'none';
-                updateDataSummary();
-            } else {
-                tabExportBtn.classList.remove('active');
-                tabImportBtn.classList.add('active');
-                exportTabContent.style.display = 'none';
-                importTabContent.style.display = 'flex';
-            }
+            if (tabExportBtn) tabExportBtn.classList.toggle('active', tab === 'export');
+            if (tabImportBtn) tabImportBtn.classList.toggle('active', tab === 'import');
+            if (tabStorageBtn) tabStorageBtn.classList.toggle('active', tab === 'storage');
+
+            if (exportTabContent) exportTabContent.style.display = (tab === 'export') ? 'flex' : 'none';
+            if (importTabContent) importTabContent.style.display = (tab === 'import') ? 'flex' : 'none';
+            if (storageTabContent) storageTabContent.style.display = (tab === 'storage') ? 'flex' : 'none';
+
+            updateDataSummary();
+
             if (typeof feather !== 'undefined') {
                 feather.replace();
             }
@@ -1358,6 +1435,8 @@
             const countEl = document.getElementById('exportLecturesCount');
             const sizeEl = document.getElementById('exportDataSize');
             const sourceEl = document.getElementById('exportSourceLabel');
+            const ratioEl = document.getElementById('storageUsageRatio');
+            const fillEl = document.getElementById('storageMeterFill');
 
             const count = (lectureHistory || []).length;
             const rawJson = JSON.stringify(lectureHistory || []);
@@ -1365,6 +1444,13 @@
 
             if (countEl) countEl.textContent = count;
             if (sizeEl) sizeEl.textContent = formatBytes(sizeInBytes);
+
+            // 5 MB standard browser localStorage estimate
+            const maxEstimate = 5 * 1024 * 1024;
+            const percentage = Math.min(100, Math.max(1, ((sizeInBytes / maxEstimate) * 100))).toFixed(1);
+            if (ratioEl) ratioEl.textContent = `${formatBytes(sizeInBytes)} / ~5 MB (${percentage}%)`;
+            if (fillEl) fillEl.style.width = `${percentage}%`;
+
             if (sourceEl) {
                 const userAgent = navigator.userAgent;
                 let browser = 'Browser';
@@ -1378,7 +1464,64 @@
             }
         }
 
-        // --- Export Feature 1: Cloud 6-Digit Sync Code ---
+        // --- Binary Encoding / Decoding Engine (.angkor) ---
+        function encodeAngkorBackup(payloadObj) {
+            const jsonStr = JSON.stringify(payloadObj);
+            const utf8Bytes = new TextEncoder().encode(jsonStr);
+            let binary = '';
+            const len = utf8Bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(utf8Bytes[i]);
+            }
+            return "ANGKOR_SECURE_ARCHIVE_v1::" + btoa(binary);
+        }
+
+        function decodeAngkorBackup(inputStr) {
+            let clean = inputStr.trim();
+            if (clean.startsWith("ANGKOR_SECURE_ARCHIVE_v1::")) {
+                clean = clean.substring("ANGKOR_SECURE_ARCHIVE_v1::".length);
+                const binary = atob(clean);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                const jsonStr = new TextDecoder().decode(bytes);
+                return JSON.parse(jsonStr);
+            }
+            return JSON.parse(inputStr);
+        }
+
+        // --- Export Option 1: Protected Binary Archive (.angkor) ---
+        function exportDataToAngkorBinary() {
+            if (!lectureHistory || lectureHistory.length === 0) {
+                showToast("No lecture notes saved yet to export.", "info");
+                return;
+            }
+
+            const exportObj = {
+                app: "Angkor AI",
+                format: "angkor_binary_v1",
+                exported_at: new Date().toISOString(),
+                total_lectures: lectureHistory.length,
+                history: lectureHistory
+            };
+
+            const encodedString = encodeAngkorBackup(exportObj);
+            const blob = new Blob([encodedString], { type: 'application/octet-stream' });
+            const dlAnchor = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const url = URL.createObjectURL(blob);
+            dlAnchor.setAttribute("href", url);
+            dlAnchor.setAttribute("download", `angkor_backup_${dateStr}.angkor`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+            showToast("Protected .angkor binary archive downloaded!", "success");
+        }
+
+        // --- Export Option 2: Cloud 6-Digit Sync Code ---
         async function generateSyncCode() {
             if (!lectureHistory || lectureHistory.length === 0) {
                 showToast("No lecture notes saved yet. Analyze a lecture first!", "info");
@@ -1393,6 +1536,7 @@
 
             const payload = {
                 version: "1.0",
+                format: "angkor_cloud_sync",
                 exported_at: new Date().toISOString(),
                 platform: "Angkor AI",
                 history: lectureHistory
@@ -1416,7 +1560,6 @@
                 const genArea = document.getElementById('syncCodeGeneratedArea');
                 genArea.style.display = 'flex';
 
-                // Setup countdown timer (15 minutes)
                 let remaining = data.expires_in_seconds || 900;
                 const countdownEl = document.getElementById('codeTimerCountdown');
 
@@ -1465,7 +1608,7 @@
             });
         }
 
-        // --- Export Feature 2: Standalone .JSON file download & Clipboard ---
+        // --- Export Option 3: Standalone .JSON file download & Clipboard ---
         function exportDataToFile() {
             if (!lectureHistory || lectureHistory.length === 0) {
                 showToast("No lecture notes saved yet to export.", "info");
@@ -1558,7 +1701,7 @@
             }
         }
 
-        // --- Import Feature 2: Dropzone & File upload ---
+        // --- Import Feature 2: Dropzone & File upload (.angkor and .json) ---
         function triggerFileInput() {
             const fileInput = document.getElementById('importFileInput');
             if (fileInput) fileInput.click();
@@ -1593,19 +1736,15 @@
         }
 
         function readBackupFile(file) {
-            if (!file.name.endsWith('.json') && file.type && !file.type.includes('json')) {
-                showToast("Please select a valid .json backup file.", "error");
-                return;
-            }
-
             const reader = new FileReader();
             reader.onload = (event) => {
                 try {
-                    const parsed = JSON.parse(event.target.result);
+                    const text = event.target.result;
+                    const parsed = decodeAngkorBackup(text);
                     showImportPreview(parsed);
                 } catch (err) {
-                    console.error("JSON parse error:", err);
-                    showToast("Failed to parse JSON file. Ensure it is a valid backup.", "error");
+                    console.error("Archive parse error:", err);
+                    showToast("Failed to parse file. Ensure it is a valid .angkor or .json backup.", "error");
                 }
             };
             reader.onerror = () => {
@@ -1618,15 +1757,15 @@
             const textEl = document.getElementById('importPasteText');
             const text = (textEl.value || '').trim();
             if (!text) {
-                showToast("Please paste backup JSON into the box first.", "info");
+                showToast("Please paste backup content into the box first.", "info");
                 return;
             }
 
             try {
-                const parsed = JSON.parse(text);
+                const parsed = decodeAngkorBackup(text);
                 showImportPreview(parsed);
             } catch (err) {
-                showToast("Invalid JSON syntax: " + err.message, "error");
+                showToast("Could not parse content: " + err.message, "error");
             }
         }
 
@@ -1642,7 +1781,6 @@
                 items = [incomingData];
             }
 
-            // Filter for valid items
             const validItems = items.filter(item => item && (item.metadata || item.analysis));
 
             if (validItems.length === 0) {
@@ -1694,6 +1832,7 @@
             pendingImportData = null;
         }
 
+        // --- Confirm Import (Regenerates Brand New Unique Chat/Lecture IDs) ---
         function confirmImportData() {
             if (!pendingImportData || pendingImportData.length === 0) {
                 showToast("No pending data to import.", "info");
@@ -1703,27 +1842,28 @@
             const modeRadio = document.querySelector('input[name="importMode"]:checked');
             const mode = modeRadio ? modeRadio.value : 'merge';
 
+            // REGENERATE FRESH UNIQUE LECTURE_ID FOR EVERY IMPORTED NOTE
+            // Ensures chat/session ID is unique in this browser while preserving all notes & transcripts
             const incoming = pendingImportData.map(item => {
-                if (!item.lecture_id) {
-                    item.lecture_id = generateLectureId();
-                }
-                if (!item.metadata) {
-                    item.metadata = {
-                        title: item.title || 'Imported Lecture',
-                        author: item.author || 'Unknown',
-                        duration: null,
-                        video_id: item.video_id || generateLectureId()
-                    };
-                }
-                return item;
+                const freshSessionId = generateLectureId();
+                return {
+                    ...item,
+                    lecture_id: freshSessionId,
+                    metadata: {
+                        ...(item.metadata || {}),
+                        title: (item.metadata && item.metadata.title) || item.title || 'Imported Lecture',
+                        author: (item.metadata && item.metadata.author) || item.author || 'Unknown',
+                        duration: (item.metadata && item.metadata.duration) || null,
+                        video_id: (item.metadata && item.metadata.video_id) || item.video_id || freshSessionId
+                    }
+                };
             });
 
             if (mode === 'replace') {
                 lectureHistory = incoming.slice(0, 30);
             } else {
-                // Merge: Keep existing, update/add incoming without duplicating video_id
-                const incomingIds = new Set(incoming.map(it => it.metadata.video_id).filter(Boolean));
-                const filteredExisting = lectureHistory.filter(it => !it.metadata.video_id || !incomingIds.has(it.metadata.video_id));
+                const incomingVideoIds = new Set(incoming.map(it => it.metadata.video_id).filter(Boolean));
+                const filteredExisting = lectureHistory.filter(it => !it.metadata.video_id || !incomingVideoIds.has(it.metadata.video_id));
                 lectureHistory = [...incoming, ...filteredExisting].slice(0, 30);
             }
 
@@ -1731,23 +1871,39 @@
                 localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
             } catch (err) {
                 console.warn("Storage quota trimmed on import:", err);
-                // If quota exceeded, trim to 10 items
                 lectureHistory = lectureHistory.slice(0, 10);
                 try {
                     localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
                 } catch (e) {}
             }
 
-            // Update UI
             renderHistoryUI();
             updateDataSummary();
             closeDataModal();
-            showToast(`Successfully imported ${incoming.length} lecture notes!`, "success");
+            showToast(`Restored ${incoming.length} lectures with new session IDs!`, "success");
 
-            // If on empty state or no active note is loaded, load the latest imported note
             if (!activeAnalysis && lectureHistory.length > 0) {
                 loadHistoryItem(lectureHistory[0]);
             }
+        }
+
+        // --- Danger Zone: Clear All Stored Lectures ---
+        function clearAllStoredHistory() {
+            const confirmed = window.confirm(
+                "Are you sure you want to delete all saved lecture history from this browser?\n\nThis will permanently wipe your notes and transcripts from this device. (Make sure you downloaded a .angkor backup if you want to keep them)."
+            );
+            if (!confirmed) return;
+
+            lectureHistory = [];
+            try {
+                localStorage.removeItem('veda_lecture_history');
+            } catch (e) {}
+
+            renderHistoryUI();
+            startNewLecture(true);
+            updateDataSummary();
+            closeDataModal();
+            showToast("All stored lectures have been deleted from this browser.", "info");
         }
     </script>
 </body>

@@ -121,8 +121,8 @@ graph TD
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/aryavartsubhammoharana/veda-ai.git
-   cd veda-ai
+   git clone https://github.com/<your-username>/angkor-ai.git
+   cd angkor-ai
    ```
 
 2. **Install dependencies:**

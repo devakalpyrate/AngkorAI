@@ -224,6 +224,31 @@ body {
     gap: 10px;
 }
 
+.nav-settings-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    padding: 5px 12px;
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+}
+.nav-settings-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+}
+.nav-settings-btn i {
+    width: 13px;
+    height: 13px;
+}
+
 .github-btn {
     display: flex;
     align-items: center;
