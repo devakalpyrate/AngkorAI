@@ -371,6 +371,8 @@
                         <i data-feather="camera"></i>
                         <span>Scan QR Code with Camera</span>
                     </button>
+                    <!-- Native Camera capture input (bypasses browser HTTP origin restriction on 10.16.x IP) -->
+                    <input type="file" id="qrCameraPhotoInput" accept="image/*" capture="environment" style="display: none;" onchange="handleQrPhotoSelected(event)">
                     <div class="divider-text"><span>OR ENTER MANUALLY</span></div>
                 </div>
 
@@ -1603,7 +1605,47 @@
             }
         }
 
+        // Native Camera Photo Capture (Works 100% on HTTP IP Addresses without requiring HTTPS)
+        function triggerQrCameraPhoto() {
+            const input = document.getElementById('qrCameraPhotoInput');
+            if (input) {
+                input.click();
+            }
+        }
+
+        async function handleQrPhotoSelected(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            const file = files[0];
+
+            showToast("Reading QR Code...", "info");
+
+            try {
+                if (!html5QrScannerInstance) {
+                    html5QrScannerInstance = new Html5Qrcode("qrScannerViewport");
+                }
+                const decodedText = await html5QrScannerInstance.scanFile(file, false);
+                handleScannedQrPayload(decodedText);
+            } catch (err) {
+                console.error("Photo QR scan error:", err);
+                showToast("Could not detect QR code in photo. Please keep the QR code sharp and try again.", "error");
+            } finally {
+                event.target.value = '';
+            }
+        }
+
         async function startQrScanner() {
+            // Check if we are on an insecure HTTP LAN IP address (like http://10.16.x.x:5000)
+            const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            const isSecure = window.isSecureContext || isLocalhost;
+
+            // If browser blocks live camera stream due to HTTP IP policy:
+            // Instantly open the phone's native camera! (No permission configuration required)
+            if (!isSecure || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                triggerQrCameraPhoto();
+                return;
+            }
+
             const backdrop = document.getElementById('qrScannerBackdrop');
             if (backdrop) backdrop.style.display = 'flex';
             if (typeof feather !== 'undefined') feather.replace();
@@ -1634,9 +1676,10 @@
                     }
                 );
             } catch (err) {
-                console.error("Camera scan start error:", err);
-                showToast("Camera error: " + (err.message || "Please allow camera access."), "error");
+                console.warn("Live camera stream failed or blocked, opening native camera:", err);
                 stopQrScanner();
+                // Graceful instant fallback to native camera snapshot
+                triggerQrCameraPhoto();
             }
         }
 
