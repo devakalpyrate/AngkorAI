@@ -1,0 +1,219 @@
+================================================================================
+           ANGKOR AI — EXPERIMENTAL NODE-TO-NODE TRAVELING PIPELINE
+================================================================================
+Document Type   : Architecture Specification & Experimental Blueprint
+Feature         : Dynamic Node-to-Node Traveling Array Pipeline Loader
+Target Files    : templates/index.html, static/css/index.css, app.py
+Created         : 2026-11-22
+Status          : Experimental Prototype / In-Review
+
+--------------------------------------------------------------------------------
+1. CORE CONCEPT & OBJECTIVE
+--------------------------------------------------------------------------------
+Currently, when a user submits a YouTube video link, the interface displays a 
+standard 4-step stepper with a rotating spinner.
+
+This experimental pipeline transforms the loading process into a visual 
+"Traveling Array Data Pipeline". As the backend processes the request, the 
+data payload is treated as a packet traveling through an array of interconnected 
+processing nodes:
+
+   [Node 0: Link Ingestion] 
+             |
+      (Data Packet Travels)
+             v
+   [Node 1: Subtitle Extraction] 
+             |
+      (Data Packet Travels)
+             v
+   [Node 2: Crux AI Reasoning] 
+             |
+      (Data Packet Travels)
+             v
+   [Node 3: Note Synthesis & Render]
+
+At every step, the user visually sees the data packet moving from one node 
+to the next, accompanied by live telemetry and micro-state feedback.
+
+--------------------------------------------------------------------------------
+2. PIPELINE NODES & ARRAY DATA SCHEMAS
+--------------------------------------------------------------------------------
+The loading sequence is driven by a 4-element pipeline state array:
+
+   const PIPELINE_NODES = [
+     {
+       index: 1,
+       id: "node_ingest",
+       title: "Link Ingestion",
+       icon: "link",
+       badge: "METADATA",
+       description: "Validating video ID, fetching oEmbed title & author",
+       incomingPayload: "URL String",
+       outgoingPayload: "{ video_id, title, author, duration }"
+     },
+     {
+       index: 2,
+       id: "node_extract",
+       title: "Subtitle Extraction",
+       icon: "file-text",
+       badge: "TRANSCRIPT",
+       description: "Checking Redis cache -> Subadata -> Groq Whisper fallback",
+       incomingPayload: "{ video_id, duration }",
+       outgoingPayload: "{ transcript_text, language, word_count }"
+     },
+     {
+       index: 3,
+       id: "node_crux",
+       title: "Crux AI Reasoning",
+       icon: "cpu",
+       badge: "LLM INFERENCE",
+       description: "Groq LPU (Qwen/Llama) ultra-fast reasoning (~0.6-2.5s)",
+       incomingPayload: "{ transcript_text, prompt }",
+       outgoingPayload: "{ summary, ground_reality, what_not, formulas }"
+     },
+     {
+       index: 4,
+       id: "node_render",
+       title: "Synthesis & Render",
+       icon: "check-circle",
+       badge: "STRUCTURE",
+       description: "Markdown formatting, LaTeX KaTeX formulas & UI hydration",
+       incomingPayload: "{ analysis, metadata, transcript }",
+       outgoingPayload: "Rendered Workspace View"
+     }
+   ];
+
+--------------------------------------------------------------------------------
+3. WHAT CHANGES OCCUR AS THE ARRAY TRAVELS (NODE-BY-NODE TELEMETRY)
+--------------------------------------------------------------------------------
+Along with the animated travel between nodes, the following dynamic changes 
+should occur on the screen:
+
+A. Connector Track Animation (The Traveling Beam):
+   - A glowing white/accent energy beam travels along the connecting line 
+     between nodes.
+   - Progress increments proportionally:
+       Node 1 Active: Beam fill at 0% -> 33%
+       Node 2 Active: Beam fill at 33% -> 66%
+       Node 3 Active: Beam fill at 66% -> 100%
+       Node 4 Active: All nodes connected, pulsing ready state.
+
+B. Node State Micro-Interactions:
+   - IDLE / PENDING:
+     Dim border, muted icon, low opacity.
+   - RECEIVING PACKET:
+     Particle enters the node circle, circle triggers a subtle radial ripple.
+   - PROCESSING / ACTIVE:
+     Glow intensity increases, glowing white ring, active telemetry badge.
+   - COMPLETED:
+     Icon transforms into a checkmark, border stays solid white, packet departs.
+
+C. Traveling Array HUD (Inspector Bar):
+   - A live monospace telemetry terminal placed below the stepper.
+   - Shows the visual state of the array in real-time:
+     e.g., [ INGEST: OK ] ===> [ TRANSCRIPT: 14.8 KB ] ===> [ AI: PROCESSING ] ===> [ SYNTHESIS ]
+   - Shows live elapsed time counter (e.g. 0.8s, 1.4s, 2.1s).
+
+D. Background Ambient Focus Shift:
+   - As the array moves from Node 1 to Node 4, the subtle radial background glow
+     dynamically shifts along the X-axis to illuminate the currently active node.
+
+E. Seamless Transition into Results:
+   - When Node 4 finishes, instead of a sudden display toggle, the loader card 
+     smoothly expands into the two-column analysis workspace (`video-column` and 
+     `analysis-column`).
+
+--------------------------------------------------------------------------------
+4. EXPERIMENTAL UI IMPLEMENTATION DETAILS
+--------------------------------------------------------------------------------
+In the prototype implementation:
+
+1. HTML Structure:
+   - Replaced plain numeric circles with icon-assisted node circles.
+   - Added a `.stepper-track-fill` element inside `.stepper` for the traveling beam.
+   - Added a `.pipeline-array-tracker` bar showing the array elements and their 
+     real-time status tags.
+
+2. CSS Animations:
+   - `@keyframes travelPulse`: Glow pulsing on active node.
+   - `@keyframes packetTravel`: Traveling photon particle along the connector line.
+   - Smooth `transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1)` on the connector beam.
+
+3. JavaScript Controller:
+   - `updateStepperProgress(activeStepIndex, message)` dynamically adjusts:
+       - `.stepper-track-fill` width (`0%`, `33%`, `66%`, `100%`).
+       - Active class and badge highlights on the pipeline tracker.
+       - Terminal telemetry message.
+
+--------------------------------------------------------------------------------
+5. EXPERIMENTAL TRIGGER CODE: 50012 (LIVE TRADING STYLE DEMO)
+--------------------------------------------------------------------------------
+To test and observe this feature without calling the YouTube API:
+1. In the input box on the landing page, enter the experimental code:
+   50012
+2. Press "Analyze Video" (or hit Enter).
+3. The system mounts the Live Array Stream HUD in leisurely, observable tempo 
+   (~14 seconds total, ~3.5 seconds per node):
+   - Array[0]: URL Ingest -> Slot allocated, dummy stream ingested.
+   - Array[1]: Subtitles -> Speech tokens buffered (dummy transcript: a b c d e f g 1 2 3 4 5...).
+   - Array[2]: Crux AI -> Reasoning tensor compilation.
+   - Array[3]: Synthesis -> Formats structured dummy content (a b c d e f g h i j k l m repeated).
+4. Terminal logs stream tick-by-tick with timestamps and packet transfer indicators.
+5. Once complete, it hydrates the workspace with the generated dummy notes.
+
+--------------------------------------------------------------------------------
+6. BENCHMARKS & EVALUATION CRITERIA
+--------------------------------------------------------------------------------
+- User Perception: Reduces perceived waiting time during transcript fetching and 
+  AI analysis.
+- Clarity: The user understands exactly what the system is doing at each second 
+  (no "is it stuck?" ambiguity).
+- Lightweight: Zero extra external libraries required (pure CSS + lightweight 
+  vanilla JS).
+
+================================================================================
+                               END OF BLUEPRINT
+================================================================================
+
+
+--------------------------------------------------------------------------------
+8. PROGRESSIVE SKELETON LOADING & TEXT STREAMING REVEAL (STEP 1 -> STEP 4)
+--------------------------------------------------------------------------------
+Flow Architecture:
+1. Step 1 (Node 1 - Validating Link):
+   - Stepper Node 1 active.
+   - Results container displays with initial subtle skeleton shimmer.
+   - Video thumbnail and video details show initial shimmering placeholders.
+2. Step 2 (Node 2 - Extracting Subtitles):
+   - Stepper Node 2 active.
+   - Video card skeleton active and transcript card skeleton activates with animated shimmer wave.
+3. Step 3 (Node 3 - AI Notes Generation):
+   - Stepper Node 3 active.
+   - Notes card skeleton glows and shimmers actively while AI processes.
+4. Step 4 (Node 4 - Formatting Output & Final Reveal):
+   - Stepper Node 4 active.
+   - Skeleton overlays dissolve and real card frames fade in.
+   - Video thumbnail, title, author, and transcript segments populate.
+   - Right-side tab buttons automatically type out titles:
+       * "Executive Notes" (typewriter effect)
+       * "Chat with Video" (typewriter effect) + "AI" badge fade-in
+   - Notes content streams in progressively like live text generation (progressive block streaming).
+   - Once streaming completes, math formulas are rendered (KaTeX) and the stepper loader collapses cleanly.
+
+
+--------------------------------------------------------------------------------
+9. LAYER ARCHITECTURE (LAYER 1 OVERLAY & LAYER 2 BACKGROUND CARDS)
+--------------------------------------------------------------------------------
+1. Layer 2 (Background - Results Container #resultsContainer):
+   - Rendered from t=0 in its exact, final shape (height 100%, 290px left column + 1fr notes column).
+   - Never pushed down or distorted; maintains the identical geometry of the completed UI.
+   - Skeletons live directly inside each individual card (.video-card, .transcript-card, .notes-card).
+2. Layer 1 (Foreground Overlay - Floating Stepper #loaderContainer):
+   - Positioned as a floating absolute overlay (position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 50;).
+   - Floats above the workspace with blur backdrop and sleek shadow.
+   - Smoothly fades out and unmounts once Step 4 and progressive text streaming complete.
+3. Node-by-Node Background Card Generation:
+   - Node 1: Video card, transcript card, and notes card show full skeleton structure.
+   - Node 2: YouTube validation finishes -> Video thumbnail, duration, title, and creator populate and fade in. Transcript card skeleton actively shimmers.
+   - Node 3: Subtitles acquired -> Transcript segments populate and fade into the transcript card. Notes card box completes with its header and action buttons, while its body actively shimmers with #notesBodySkeleton.
+   - Node 4: Notes AI finishes -> Notes body skeleton dissolves, tab titles typewriter animate ("Executive Notes", "Chat with Video"), and markdown content streams in progressively. Floating loader fades away.

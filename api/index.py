@@ -1,19 +1,13 @@
 import os
 import sys
 
-# Add repository root to Python path
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
 from app import app
 
-
 class VercelPathMiddleware:
-    """WSGI Middleware for Vercel:
-    Restores the original PATH_INFO from x-forwarded-uri or x-matched-path headers
-    if Vercel rewrote the request URL to /api/index.
-    """
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
@@ -27,6 +21,5 @@ class VercelPathMiddleware:
             if len(parts) > 1 and not environ.get('QUERY_STRING'):
                 environ['QUERY_STRING'] = parts[1]
         return self.wsgi_app(environ, start_response)
-
 
 app.wsgi_app = VercelPathMiddleware(app.wsgi_app)

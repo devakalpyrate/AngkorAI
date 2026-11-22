@@ -1,4 +1,3 @@
-import os
 import logging
 import requests
 from google import genai
@@ -15,30 +14,65 @@ CRITICAL INSTRUCTIONS:
 
 Output your response in clean Markdown with the following exact structure:
 
-# (Concise, High-Impact Title of the Video's True Subject)
-
-## ⚡ Quick Crux (30-Second TL;DR)
 - (2-3 crisp bullet points explaining the core essence and main takeaway of the video)
 
-## 🎯 What's Happening (The Core Breakdown & Reality)
 - (Detail the main arguments, events, claims, and ground reality presented)
 - (Include specific facts, examples, frameworks, or data points discussed)
 - (Explain the key mechanisms or insights revealed in the video)
 
-## ❌ What's Not Happening (Misconceptions, Nuances & Warnings)
 - (Clarify what is NOT true, what the speaker refuted, or where people commonly get misled)
 - (Highlight limitations, counter-arguments, caveats, or missing context)
 
-## 💡 The Bottom Line & Final Verdict
 - (Direct, actionable summary: what does this actually mean for the viewer?)
 
 Transcript:
 {transcript_text}
 """
 
+def analyze_transcript_groq(transcript_text: str, groq_key: str, model_name: str = "qwen/qwen3.8-27b"):
+    prompt = ANALYSIS_SYSTEM_PROMPT.format(transcript_text=transcript_text[:24000])
 
-def analyze_transcript_nvidia(transcript_text: str, nvidia_key: str, model_name: str = "nvidia/nemotron-3-ultra-550b-a55b"):
-    """Send transcript to NVIDIA NIM API using OpenAI-compatible client with streaming support."""
+    headers = {
+        "Authorization": f"Bearer {groq_key}",
+        "Content-Type": "application/json"
+    }
+    candidate_models = [
+        model_name,
+        "qwen/qwen3.8-27b",
+        "openai/gpt-oss-120b",
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant"
+    ]
+    models_to_try = []
+    for m in candidate_models:
+        if m and m not in models_to_try:
+            models_to_try.append(m)
+
+    last_err = None
+    for m in models_to_try:
+        payload = {
+            "model": m,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 4096,
+            "temperature": 0.3
+        }
+        try:
+            resp = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload, timeout=25)
+            if resp.status_code == 200:
+                data = resp.json()
+                msg = data["choices"][0]["message"]
+                content = (msg.get("content") or msg.get("reasoning") or "").strip()
+                if content:
+                    return content
+            last_err = RuntimeError(f"Groq {m} returned {resp.status_code}: {resp.text}")
+            logging.warning("Groq model %s returned status %d. Trying next candidate...", m, resp.status_code)
+        except Exception as e:
+            last_err = e
+            logging.warning("Groq model %s request exception: %s. Trying next...", m, e)
+            continue
+    raise last_err or RuntimeError("All Groq models failed.")
+
+def analyze_transcript_nvidia(transcript_text: str, nvidia_key: str, model_name: str = "meta/llama-3.3-70b-instruct"):
     client = OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
         api_key=nvidia_key
@@ -49,8 +83,8 @@ def analyze_transcript_nvidia(transcript_text: str, nvidia_key: str, model_name:
     candidate_models = [
         model_name,
         "meta/llama-3.3-70b-instruct",
-        "nvidia/llama-3.1-nemotron-70b-instruct",
-        "mistralai/mistral-large-2-instruct"
+        "mistralai/mistral-large-2-instruct",
+        "nvidia/llama-3.1-nemotron-70b-instruct"
     ]
     models_to_try = []
     for m in candidate_models:
@@ -60,17 +94,13 @@ def analyze_transcript_nvidia(transcript_text: str, nvidia_key: str, model_name:
     last_err = None
     for model in models_to_try:
         try:
-            extra_body = {}
-            if "nemotron" in model:
-                extra_body = {"chat_template_kwargs": {"enable_thinking": True}}
-
             completion = client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.3,
-                max_tokens=6000,
-                extra_body=extra_body if extra_body else None,
-                stream=True
+                max_tokens=4096,
+                stream=True,
+                timeout=25.0
             )
 
             collected_content = []
@@ -91,9 +121,7 @@ def analyze_transcript_nvidia(transcript_text: str, nvidia_key: str, model_name:
 
     raise last_err or RuntimeError("All NVIDIA models failed to generate content.")
 
-
 def analyze_transcript_gemini(transcript_text: str, gemini_key: str):
-    """Send transcript to Google Gemini API as a fallback with model resilience."""
     client = genai.Client(api_key=gemini_key)
 
     prompt = ANALYSIS_SYSTEM_PROMPT.format(transcript_text=transcript_text[:24000])
@@ -115,38 +143,7 @@ def analyze_transcript_gemini(transcript_text: str, gemini_key: str):
 
     raise last_err or RuntimeError("All Gemini models failed to generate content.")
 
-
-def analyze_transcript_groq(transcript_text: str, groq_key: str, model_name: str = "openai/gpt-oss-120b"):
-    """Send transcript to Groq API via direct HTTP as a fallback."""
-    prompt = ANALYSIS_SYSTEM_PROMPT.format(transcript_text=transcript_text[:24000])
-
-    headers = {
-        "Authorization": f"Bearer {groq_key}",
-        "Content-Type": "application/json"
-    }
-    candidate_models = [model_name, "openai/gpt-oss-120b", "llama-3.3-70b-versatile", "qwen/qwen3.8-27b"]
-    last_err = None
-    for m in candidate_models:
-        payload = {
-            "model": m,
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 4096,
-            "temperature": 0.3
-        }
-        try:
-            resp = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload, timeout=90)
-            if resp.status_code == 200:
-                data = resp.json()
-                return data["choices"][0]["message"]["content"]
-            last_err = RuntimeError(f"Groq {m} returned {resp.status_code}: {resp.text}")
-        except Exception as e:
-            last_err = e
-            continue
-    raise last_err or RuntimeError("All Groq models failed.")
-
-
 def analyze_transcript_sarvam(transcript_text: str, sarvam_key: str, model_name: str = "sarvam-105b-conversations"):
-    """Send transcript to Sarvam AI API for structured lecture-style notes."""
     headers = {
         "api-subscription-key": sarvam_key,
         "Content-Type": "application/json"
@@ -161,40 +158,32 @@ def analyze_transcript_sarvam(transcript_text: str, sarvam_key: str, model_name:
         "temperature": 0.3
     }
 
-    response = requests.post("https://api.sarvam.ai/v1/chat/completions", json=payload, headers=headers, timeout=180)
+    response = requests.post("https://api.sarvam.ai/v1/chat/completions", json=payload, headers=headers, timeout=60)
     response.raise_for_status()
     choice_msg = response.json()["choices"][0]["message"]
     return choice_msg.get("content") or choice_msg.get("reasoning_content") or ""
 
-
 def generate_video_intelligence(transcript_text: str, keys: dict, sarvam_model: str = "sarvam-105b-conversations"):
-    """Unified AI intelligence generator executing resilient fallback chain across providers:
-    NVIDIA -> Gemini -> Groq -> Sarvam
-    (or Sarvam first if explicitly preferred).
-    Returns tuple: (analysis_markdown, engine_name)
-    """
-    user_sarvam_key = keys.get('sarvam', '').strip()
-    user_nvidia_key = keys.get('nvidia', '').strip()
-    user_gemini_key = keys.get('gemini', '').strip()
     user_groq_key = keys.get('groq', '').strip()
+    user_gemini_key = keys.get('gemini', '').strip()
+    user_nvidia_key = keys.get('nvidia', '').strip()
+    user_sarvam_key = keys.get('sarvam', '').strip()
 
     error_messages = []
 
-    # Priority 1: NVIDIA NIM (Ultra fast, high reasoning Nemotron / Llama-3.3)
-    if user_nvidia_key:
+    if user_groq_key:
         try:
-            logging.info("Running NVIDIA NIM video intelligence...")
-            result = analyze_transcript_nvidia(transcript_text, user_nvidia_key)
+            logging.info("Running Groq LPU video intelligence (Priority 1)...")
+            result = analyze_transcript_groq(transcript_text, user_groq_key)
             if result:
-                return result, "NVIDIA NIM (Nemotron)"
+                return result, "Groq (LLaMA 3.3 70B)"
         except Exception as e:
-            logging.warning("NVIDIA NIM analysis failed: %s", e)
-            error_messages.append(f"NVIDIA: {str(e)}")
+            logging.warning("Groq analysis failed: %s", e)
+            error_messages.append(f"Groq: {str(e)}")
 
-    # Priority 2: Gemini 2.5 Flash / 2.0 Flash
     if user_gemini_key:
         try:
-            logging.info("Running Google Gemini video intelligence fallback...")
+            logging.info("Running Google Gemini Flash video intelligence fallback (Priority 2)...")
             result = analyze_transcript_gemini(transcript_text, user_gemini_key)
             if result:
                 return result, "Google Gemini Flash"
@@ -202,18 +191,16 @@ def generate_video_intelligence(transcript_text: str, keys: dict, sarvam_model: 
             logging.warning("Gemini analysis failed: %s", e)
             error_messages.append(f"Gemini: {str(e)}")
 
-    # Priority 3: Groq LLaMA / OSS models
-    if user_groq_key:
+    if user_nvidia_key:
         try:
-            logging.info("Running Groq video intelligence fallback...")
-            result = analyze_transcript_groq(transcript_text, user_groq_key)
+            logging.info("Running NVIDIA NIM video intelligence fallback (Priority 3)...")
+            result = analyze_transcript_nvidia(transcript_text, user_nvidia_key)
             if result:
-                return result, "Groq LLaMA-3"
+                return result, "NVIDIA NIM (LLaMA 3.3)"
         except Exception as e:
-            logging.warning("Groq analysis failed: %s", e)
-            error_messages.append(f"Groq: {str(e)}")
+            logging.warning("NVIDIA NIM analysis failed: %s", e)
+            error_messages.append(f"NVIDIA: {str(e)}")
 
-    # Priority 4: Sarvam AI
     if user_sarvam_key:
         try:
             logging.info("Running Sarvam AI video intelligence fallback (%s)...", sarvam_model)
@@ -227,7 +214,6 @@ def generate_video_intelligence(transcript_text: str, keys: dict, sarvam_model: 
     raise RuntimeError(
         f"All configured AI analysis providers failed: {' | '.join(error_messages) if error_messages else 'No API keys provided'}"
     )
-
 
 CHAT_SYSTEM_PROMPT = """
 You are Angkor AI, an expert Executive Video Intelligence Assistant. You already know this video inside and out, as if you have personally watched, studied, and mastered every second, argument, and nuance of it.
@@ -259,18 +245,13 @@ Video Knowledge Context:
 {transcript_text}
 """
 
-
 def chat_with_transcript(transcript_text: str, message: str, history: list, keys: dict) -> str:
-    """Conversational assistant querying the video transcript.
-    Maintains user-isolated temporary history in a stateless fallback chain.
-    """
     user_nvidia_key = keys.get('nvidia', '').strip()
     user_gemini_key = keys.get('gemini', '').strip()
     user_groq_key = keys.get('groq', '').strip()
 
     system_instruction = CHAT_SYSTEM_PROMPT.format(transcript_text=transcript_text[:20000])
 
-    # Build message list (system + last 6 conversation turns + current query)
     messages = [{"role": "system", "content": system_instruction}]
     if history and isinstance(history, list):
         for h in history[-6:]:
@@ -279,29 +260,29 @@ def chat_with_transcript(transcript_text: str, message: str, history: list, keys
                 messages.append({"role": r, "content": str(h['content'])[:2000]})
     messages.append({"role": "user", "content": str(message)[:3000]})
 
-    # 1. Try NVIDIA NIM (Nemotron / LLaMA)
-    if user_nvidia_key:
-        client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=user_nvidia_key)
-        for model_name in ["nvidia/nemotron-3-ultra-550b-a55b", "nvidia/llama-3.1-nemotron-70b-instruct", "mistralai/mistral-large-2-instruct"]:
+    if user_groq_key:
+        for groq_m in ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"]:
             try:
-                completion = client.chat.completions.create(
-                    model=model_name,
-                    messages=messages,
-                    temperature=0.4,
-                    max_tokens=1500
-                )
-                ans = completion.choices[0].message.content
-                if ans:
-                    return ans.strip()
+                headers = {"Authorization": f"Bearer {user_groq_key}", "Content-Type": "application/json"}
+                payload = {
+                    "model": groq_m,
+                    "messages": messages,
+                    "max_tokens": 1500,
+                    "temperature": 0.4
+                }
+                resp = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload, timeout=20)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    msg = data["choices"][0]["message"]
+                    ans = (msg.get("content") or msg.get("reasoning") or "").strip()
+                    if ans:
+                        return ans
             except Exception as e:
-                logging.warning("NVIDIA Chat model %s failed: %s", model_name, e)
-                continue
+                logging.warning("Groq Chat model %s error: %s", groq_m, e)
 
-    # 2. Try Google Gemini Flash
     if user_gemini_key:
         try:
             client = genai.Client(api_key=user_gemini_key)
-            # Format history for Gemini
             gemini_prompt = f"{system_instruction}\n\nConversation History:\n"
             for m in messages[1:]:
                 gemini_prompt += f"{m['role'].upper()}: {m['content']}\n"
@@ -316,22 +297,23 @@ def chat_with_transcript(transcript_text: str, message: str, history: list, keys
         except Exception as e:
             logging.warning("Gemini Chat fallback error: %s", e)
 
-    # 3. Try Groq LLaMA
-    if user_groq_key:
-        try:
-            headers = {"Authorization": f"Bearer {user_groq_key}", "Content-Type": "application/json"}
-            payload = {
-                "model": "llama-3.3-70b-versatile",
-                "messages": messages,
-                "max_tokens": 1500,
-                "temperature": 0.4
-            }
-            resp = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload, timeout=40)
-            if resp.status_code == 200:
-                data = resp.json()
-                return data["choices"][0]["message"]["content"].strip()
-        except Exception as e:
-            logging.warning("Groq Chat fallback error: %s", e)
+    if user_nvidia_key:
+        client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=user_nvidia_key)
+        for model_name in ["meta/llama-3.3-70b-instruct", "mistralai/mistral-large-2-instruct", "nvidia/llama-3.1-nemotron-70b-instruct"]:
+            try:
+                completion = client.chat.completions.create(
+                    model=model_name,
+                    messages=messages,
+                    temperature=0.4,
+                    max_tokens=1500,
+                    timeout=20.0
+                )
+                ans = completion.choices[0].message.content
+                if ans:
+                    return ans.strip()
+            except Exception as e:
+                logging.warning("NVIDIA Chat model %s failed: %s", model_name, e)
+                continue
 
     raise RuntimeError("All AI chat providers failed to respond. Please check your API keys.")
 

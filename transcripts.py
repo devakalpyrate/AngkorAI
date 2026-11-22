@@ -9,9 +9,7 @@ import yt_dlp
 from youtube_transcript_api import YouTubeTranscriptApi
 from redis_cache import get_cached_transcript, set_cached_transcript
 
-
 def find_ffmpeg_binaries():
-    """Locate ffmpeg and ffprobe on Windows or other systems."""
     candidates = []
     for name in ["ffmpeg", "ffprobe"]:
         path = shutil.which(name)
@@ -36,11 +34,7 @@ def find_ffmpeg_binaries():
     ffprobe = next((path for name, path in candidates if name == "ffprobe"), None)
     return ffmpeg, ffprobe
 
-
 def extract_transcript_via_ytdlp(video_id: str):
-    """Fallback subtitle extractor using yt-dlp with client spoofing.
-    Safely bypassed in cloud serverless environments (like Vercel) where YouTube blocks datacenter IPs."""
-    # On serverless hosts (Vercel, AWS Lambda), YouTube blocks datacenter IPs with "Sign in to confirm you're not a bot"
     if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
         logging.info("Serverless environment detected (Vercel/Lambda). Skipping local yt-dlp to avoid datacenter bot block.")
         return None
@@ -60,7 +54,6 @@ def extract_transcript_via_ytdlp(video_id: str):
             sub_dict = info.get('subtitles', {}) or {}
             auto_dict = info.get('automatic_captions', {}) or {}
 
-            # Prioritize standard English/Hindi or any first available
             target_track = None
             source_lang = 'YouTube Subtitles'
             for lang in ['en', 'hi', 'en-US', 'en-GB']:
@@ -85,7 +78,6 @@ def extract_transcript_via_ytdlp(video_id: str):
             if not target_track:
                 return None
 
-            # Prefer json3 format URL
             json3_url = next((f['url'] for f in target_track if f.get('ext') == 'json3'), None)
             if not json3_url:
                 json3_url = target_track[0].get('url')
@@ -129,18 +121,13 @@ def extract_transcript_via_ytdlp(video_id: str):
         logging.warning("yt-dlp subtitle extraction fallback failed or blocked by YouTube: %s", e)
         return None
 
-
 def fetch_youtube_transcript(video_id: str):
-    """Attempt to fetch transcript from YouTube directly using multi-tier fallback.
-    Tries YouTubeTranscriptApi first, then yt-dlp if available."""
     raw_data = None
     source_language = 'YouTube Subtitles'
 
-    # Priority 2: Modern YouTubeTranscriptApi instance (1.x+)
     try:
         ytt = YouTubeTranscriptApi()
 
-        # Priority 1: Request preferred languages (en, hi, ur)
         try:
             fetched = ytt.fetch(video_id, languages=['en', 'en-US', 'hi', 'ur'])
             raw_data = fetched.to_raw_data() if hasattr(fetched, 'to_raw_data') else list(fetched)
@@ -148,7 +135,6 @@ def fetch_youtube_transcript(video_id: str):
         except Exception as e_pref:
             logging.debug("Preferred languages fetch failed: %s", e_pref)
 
-        # Priority 2: Request default transcript without language filter
         if not raw_data:
             try:
                 fetched = ytt.fetch(video_id)
@@ -157,7 +143,6 @@ def fetch_youtube_transcript(video_id: str):
             except Exception as e_def:
                 logging.debug("Default transcript fetch failed: %s", e_def)
 
-        # Priority 3: Iterate through available transcript list (manual or auto-generated)
         if not raw_data:
             try:
                 t_list = ytt.list(video_id)
@@ -187,7 +172,6 @@ def fetch_youtube_transcript(video_id: str):
     except Exception as e_init:
         logging.debug("Modern YouTubeTranscriptApi instance failed: %s", e_init)
 
-    # 2. Legacy class methods fallback (0.6.x)
     if not raw_data and hasattr(YouTubeTranscriptApi, 'get_transcript'):
         try:
             raw_data = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'hi', 'ur'])
@@ -206,7 +190,6 @@ def fetch_youtube_transcript(video_id: str):
                 except Exception as e_leg:
                     logging.debug("Legacy transcript list failed: %s", e_leg)
 
-    # 3. If standard transcript API failed, retry yt-dlp InnerTube extractor
     if not raw_data:
         logging.info("YouTubeTranscriptApi returned no data. Trying yt-dlp InnerTube subtitle extractor...")
         ytdlp_result = extract_transcript_via_ytdlp(video_id)
@@ -222,7 +205,6 @@ def fetch_youtube_transcript(video_id: str):
         except Exception:
             pass
 
-    # Normalize segment data into uniform Python dictionaries
     normalized_segments = []
     for item in raw_data:
         if isinstance(item, dict):
@@ -253,10 +235,7 @@ def fetch_youtube_transcript(video_id: str):
         'source': 'YouTube Subtitles'
     }
 
-
 def fetch_transcript_via_supadata(video_url: str, supadata_key: str, lang=None):
-    """Fetch transcript via Supadata AI universal transcript endpoint.
-    Handles both direct JSON segments and plain-text fallbacks."""
     if not supadata_key:
         return None
 
@@ -292,7 +271,6 @@ def fetch_transcript_via_supadata(video_url: str, supadata_key: str, lang=None):
                     txt = str(item.get('text', '') or '').strip()
                     if not txt:
                         continue
-                    # Supadata offset and duration are in milliseconds
                     offset_ms = float(item.get('offset', 0.0) or 0.0)
                     dur_ms = float(item.get('duration', 0.0) or 0.0)
                     normalized_segments.append({
@@ -301,7 +279,6 @@ def fetch_transcript_via_supadata(video_url: str, supadata_key: str, lang=None):
                         'duration': round(dur_ms / 1000.0, 2)
                     })
         elif isinstance(content, str) and content.strip():
-            # If string returned, create a single baseline segment
             normalized_segments.append({
                 'text': content.strip(),
                 'start': 0.0,
@@ -326,20 +303,16 @@ def fetch_transcript_via_supadata(video_url: str, supadata_key: str, lang=None):
         logging.warning("Supadata transcript error: %s", e)
         return None
 
-
 def transcribe_audio_fallback(url: str, groq_key: str):
-    """Download audio and transcribe using Groq Whisper if no subtitles are available on YouTube."""
     if not groq_key:
         raise RuntimeError(
             "This video does not have subtitles/transcripts available on YouTube. "
             "Please configure a valid Groq API Key in .env to enable audio transcription fallback."
         )
 
-    # On serverless hosts without external proxies, yt-dlp audio download is blocked by YouTube datacenter protection
     if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
         raise RuntimeError("Audio extraction directly on serverless datacenter IP is restricted by YouTube.")
 
-    # Disk space pre-check (require at least 100 MB free)
     temp_dir = tempfile.gettempdir()
     free_bytes = shutil.disk_usage(temp_dir).free
     if free_bytes < 100 * 1024 * 1024:
@@ -348,7 +321,6 @@ def transcribe_audio_fallback(url: str, groq_key: str):
     unique_suffix = uuid.uuid4().hex[:8]
     output_template = os.path.join(temp_dir, f'veda_temp_audio_{unique_suffix}_%(id)s.%(ext)s')
 
-    # Streamlined yt-dlp config: prefers m4a/webm directly without requiring ffmpeg
     ydl_opts = {
         'format': 'ba[ext=m4a]/ba[ext=webm]/bestaudio/best',
         'outtmpl': output_template,
@@ -373,7 +345,6 @@ def transcribe_audio_fallback(url: str, groq_key: str):
             info = ydl.extract_info(url, download=True)
             video_id = info.get('id')
 
-        # Locate downloaded audio file (.m4a, .webm, or .mp3)
         candidate_files = glob.glob(os.path.join(temp_dir, f'veda_temp_audio_{unique_suffix}_*'))
         if not candidate_files:
             raise FileNotFoundError("Audio file download failed.")
@@ -434,28 +405,13 @@ def transcribe_audio_fallback(url: str, groq_key: str):
             'source': 'Groq Whisper V3'
         }
     finally:
-        # Secure cleanup: remove all temporary audio files generated with this unique suffix
         for pattern_file in glob.glob(os.path.join(temp_dir, f'veda_temp_audio_{unique_suffix}_*')):
             try:
                 os.remove(pattern_file)
             except Exception:
                 pass
 
-
 def get_transcript_with_fallback(video_id: str, canonical_url: str, supadata_key: str = "", groq_key: str = ""):
-    """Master transcript orchestrator with Redis persistent caching.
-    Smart environment routing:
-    - Serverless (Vercel):
-      1. Upstash Redis cache (instant, 0 API credits).
-      2. If Supadata key present: Call Supadata AI directly (bypasses YouTube datacenter IP ban without wasting timeout).
-      3. Fallback to fetch_youtube_transcript.
-    - Local / Non-serverless:
-      1. Upstash Redis cache (instant).
-      2. Tier 1: YouTube subtitles via InnerTube / YouTubeTranscriptApi (100% Free).
-      3. Tier 2: Groq Whisper V3 audio download fallback (Free).
-      4. Tier 3: Supadata AI universal transcript endpoint (Final fallback to preserve credits).
-    """
-    # 1. Check Redis Cache
     cached = get_cached_transcript(video_id)
     if cached and cached.get('text'):
         logging.info("Using cached transcript for %s (Zero API calls)", video_id)
@@ -465,8 +421,6 @@ def get_transcript_with_fallback(video_id: str, canonical_url: str, supadata_key
     transcript_data = None
     is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
 
-    # On Vercel / serverless: route directly to Supadata if key available
-    # This prevents the 5-7 second doomed YouTubeTranscriptApi delay on blocked datacenter IPs
     if is_serverless and supadata_key:
         logging.info("Serverless environment (Vercel) detected. Routing directly to Supadata AI to bypass YouTube datacenter IP ban...")
         try:
@@ -477,13 +431,11 @@ def get_transcript_with_fallback(video_id: str, canonical_url: str, supadata_key
         except Exception as supa_err:
             logging.warning("Serverless Supadata primary attempt failed: %s", supa_err)
 
-    # 2. Tier 1: YouTube direct subtitles (Free)
     try:
         transcript_data = fetch_youtube_transcript(video_id)
     except Exception as e:
         logging.warning("Tier 1 direct transcript failed: %s", e)
 
-    # 3. Tier 2: Groq Whisper V3 audio download fallback (Free, skipped on serverless due to IP block & timeout)
     if not transcript_data and groq_key and not is_serverless:
         logging.info("YouTube direct subtitles unavailable. Attempting Groq Whisper audio fallback...")
         try:
@@ -493,7 +445,6 @@ def get_transcript_with_fallback(video_id: str, canonical_url: str, supadata_key
         except Exception as whisper_err:
             logging.warning("Groq Whisper transcription fallback failed: %s", whisper_err)
 
-    # 4. Tier 3: Supadata AI fallback (if not already tried above)
     if not transcript_data and supadata_key:
         logging.info("Attempting Supadata AI transcript API fallback for %s...", video_id)
         try:
@@ -506,7 +457,6 @@ def get_transcript_with_fallback(video_id: str, canonical_url: str, supadata_key
     if not transcript_data or not transcript_data.get('text'):
         raise RuntimeError("All transcript methods (YouTube subtitles, Groq Whisper, Supadata) were unable to fetch a transcript for this video.")
 
-    # Cache Tier 1 result as well for future instant access
     if transcript_data and transcript_data.get('text') and not transcript_data.get('cached'):
         set_cached_transcript(video_id, transcript_data)
 

@@ -1,6 +1,9 @@
 import os
 import re
+import json
 import time
+import secrets
+import string
 import logging
 from collections import defaultdict
 from threading import Lock
@@ -9,22 +12,25 @@ import requests
 from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
 from dotenv import load_dotenv
 
-# Modular service imports
-from redis_cache import get_cached_transcript, set_cached_transcript, set_sync_payload, get_sync_payload
+from redis_cache import (
+    get_redis_client,
+    get_cached_transcript,
+    get_cached_analysis,
+    set_cached_analysis,
+    set_sync_payload,
+    get_sync_payload
+)
 from transcripts import get_transcript_with_fallback
 from llm import generate_video_intelligence, chat_with_transcript
 from pdf_generator import generate_pdf_report
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
 )
 
-# Load environment variables once at startup
 load_dotenv()
 
-# Base directory for reliable static and template resolution on Vercel serverless
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(
@@ -35,32 +41,25 @@ app = Flask(
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
-
 @app.route('/static/<path:filename>')
 def serve_static(filename):
     from flask import send_from_directory
     return send_from_directory(os.path.join(BASE_DIR, 'static'), filename)
-
 
 @app.route('/favicon.ico')
 def favicon():
     from flask import send_from_directory
     return send_from_directory(os.path.join(BASE_DIR, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
-
-# Security: Set secret key and maximum request body size (16 MB for large transcripts and history sync)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY') or os.urandom(32).hex()
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
     return jsonify({'error': 'Request payload too large. Maximum size is 16 MB.'}), 413
 
-
 @app.after_request
 def set_security_headers(response):
-    """Inject strict HTTP security headers on all responses."""
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
@@ -76,9 +75,7 @@ def set_security_headers(response):
     )
     return response
 
-
 class SimpleRateLimiter:
-    """Thread-safe in-memory sliding window rate limiter."""
     def __init__(self, max_requests=10, window_seconds=60):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
@@ -97,17 +94,22 @@ class SimpleRateLimiter:
             self.requests[client_ip] = timestamps
             return True
 
-
 rate_limiter = SimpleRateLimiter(max_requests=10, window_seconds=60)
 
+def generate_lecture_id():
+    alphabet = string.ascii_letters + string.digits
+    res = ''.join(secrets.choice(alphabet) for _ in range(20))
+    if not any(c.isdigit() for c in res):
+        res = res[:10] + secrets.choice(string.digits) + res[11:]
+    if not any(c.isalpha() for c in res):
+        res = res[:5] + secrets.choice(string.ascii_letters) + res[6:]
+    return res
 
 def extract_video_id(url):
-    """Extract YouTube video ID from various YouTube URL formats or direct 11-char IDs."""
     if not url or not isinstance(url, str):
         return None
     url = url.strip()
 
-    # Direct 11-char base64url Video ID
     if re.match(r'^[a-zA-Z0-9_-]{11}$', url):
         return url
 
@@ -115,7 +117,6 @@ def extract_video_id(url):
         parsed = urlparse(url if '://' in url else 'https://' + url)
         netloc = (parsed.netloc or '').lower()
 
-        # Handle youtube.com domains (including m.youtube.com, www.youtube.com)
         if 'youtube.com' in netloc:
             if parsed.path == '/watch':
                 qs = parse_qs(parsed.query)
@@ -129,7 +130,6 @@ def extract_video_id(url):
                 if re.match(r'^[a-zA-Z0-9_-]{11}$', vid):
                     return vid
 
-        # Handle youtu.be short links
         elif 'youtu.be' in netloc:
             parts = [p for p in parsed.path.split('/') if p]
             if parts:
@@ -139,7 +139,6 @@ def extract_video_id(url):
     except Exception:
         pass
 
-    # Regex fallbacks
     patterns = [
         r'(?:https?:\/\/)?(?:www\.|m\.)?youtube\.com\/watch\?.*?\bv=([a-zA-Z0-9_-]{11})',
         r'(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})',
@@ -152,10 +151,7 @@ def extract_video_id(url):
             return match.group(1)
     return None
 
-
 def get_youtube_metadata(url):
-    """Fetch video metadata using YouTube oEmbed API and raw HTML for exact duration.
-    Internally validates the URL to prevent SSRF vulnerabilities."""
     metadata = {
         'title': 'YouTube Video',
         'author': 'Unknown Creator',
@@ -172,7 +168,6 @@ def get_youtube_metadata(url):
     timeout_sec = 4 if is_serverless else 10
 
     try:
-        # 1. Get basic metadata from oEmbed
         encoded_url = quote_plus(safe_canonical_url)
         response = requests.get(f"https://www.youtube.com/oembed?url={encoded_url}&format=json", timeout=timeout_sec)
         if response.status_code == 200:
@@ -184,7 +179,6 @@ def get_youtube_metadata(url):
         logging.warning("Error fetching oEmbed metadata: %s", e)
 
     try:
-        # 2. Get exact duration from page HTML microdata
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept-Language': 'en-US,en;q=0.9'
@@ -203,7 +197,6 @@ def get_youtube_metadata(url):
     except Exception as e:
         logging.warning("Error fetching exact duration: %s", e)
 
-    # 3. Supadata universal metadata fallback (if duration or title is missing)
     supadata_key = (os.environ.get('SUPADATA_API', '') or os.environ.get('SUPADATA_API_KEY', '')).strip()
     if supadata_key and (metadata['duration'] is None or metadata['title'] == 'YouTube Video'):
         try:
@@ -230,25 +223,19 @@ def get_youtube_metadata(url):
 
     return metadata
 
-
-# Flask Page Routes
 @app.route('/')
 @app.route('/home')
 @app.route('/home/<lecture_id>')
 def home(lecture_id=None):
     return render_template('index.html')
 
-
 @app.route('/about')
 def about():
     return redirect(url_for('home'))
 
-
 @app.route('/api/generate-pdf', methods=['POST'])
 @app.route('/generate-pdf', methods=['POST'])
 def generate_pdf():
-    """Server-side PDF generation using Python ReportLab.
-    Eliminates HTML-to-canvas rendering bugs, broken tables, and awkward page splits."""
     data = request.json or {}
     markdown_text = data.get('markdown') or ''
     metadata = data.get('metadata') or {}
@@ -274,12 +261,9 @@ def generate_pdf():
         logging.error("Server-side PDF generation error: %s", e, exc_info=True)
         return jsonify({'error': f'Failed to generate PDF: {str(e)}'}), 500
 
-
 @app.route('/api/chat', methods=['POST'])
 @app.route('/chat', methods=['POST'])
 def chat():
-    """Interactive conversational endpoint grounded in video transcript.
-    Stateless and user-isolated: uses client session memory to prevent memory bleed between users."""
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
@@ -296,12 +280,10 @@ def chat():
     if not message:
         return jsonify({'error': 'Message content cannot be empty.'}), 400
 
-    # 1. Fetch transcript from persistent cache (0 external API cost)
     cached_transcript = get_cached_transcript(video_id)
     transcript_text = cached_transcript.get('text', '') if cached_transcript else ''
 
     if not transcript_text:
-        # Fallback to direct client-provided transcript if not in Redis
         transcript_text = data.get('transcript_text', '').strip()
 
     if not transcript_text:
@@ -320,11 +302,9 @@ def chat():
         logging.error("Chat route error: %s", e, exc_info=True)
         return jsonify({'error': f'Failed to generate response: {str(e)}'}), 500
 
-
 @app.route('/api/analyze', methods=['POST'])
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    # Rate limiting: maximum 10 requests per minute per IP
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
@@ -346,6 +326,12 @@ def analyze():
 
     safe_canonical_url = f"https://www.youtube.com/watch?v={video_id}"
 
+    cached_payload = get_cached_analysis(video_id)
+    if cached_payload and cached_payload.get('analysis'):
+        logging.info("Full Analysis Cache HIT for %s: serving instantly from Redis/Memory.", video_id)
+        cached_payload['cached'] = True
+        return jsonify(cached_payload)
+
     user_sarvam_key = os.environ.get('SARVAM_API_KEY', '').strip()
     user_groq_key = os.environ.get('GROQ_API_KEY', '').strip()
     user_nvidia_key = os.environ.get('NVIDIA_API_KEY', '').strip()
@@ -354,20 +340,16 @@ def analyze():
     sarvam_model = os.environ.get('SARVAM_MODEL', 'sarvam-105b-conversations')
 
     try:
-        # Step 1: Fetch Video Metadata
         metadata = get_youtube_metadata(safe_canonical_url)
         metadata['video_id'] = video_id
         metadata['url'] = safe_canonical_url
 
-        # Check Duration Limit Early if duration is already known
         video_duration = metadata.get('duration')
         if video_duration is not None and float(video_duration) > 1220:
             return jsonify({
                 'error': 'Video is too long! We currently cannot generate notes for videos exceeding 20 minutes and 20 seconds.'
             }), 400
 
-        # Step 2: Fetch Transcript with Redis Cache & Multi-tier Fallback
-        # Checks Redis cache -> YouTube direct subtitles (Free) -> Supadata -> Groq Whisper
         try:
             transcript_data = get_transcript_with_fallback(
                 video_id=video_id,
@@ -386,7 +368,6 @@ def analyze():
                 'error': 'Could not extract transcript for this video. Please check if the video has speech or captions.'
             }), 400
 
-        # Calculate duration from transcript if missing from metadata
         if (metadata.get('duration') is None or metadata.get('duration') == 0) and transcript_data.get('segments'):
             try:
                 last_segment = transcript_data['segments'][-1]
@@ -394,7 +375,6 @@ def analyze():
             except Exception:
                 pass
 
-        # Strict duration limit enforcement (20m 20s = 1220s)
         video_duration = metadata.get('duration')
         if video_duration is None:
             return jsonify({
@@ -406,11 +386,10 @@ def analyze():
                 'error': 'Video is too long! We currently cannot generate notes for videos exceeding 20 minutes and 20 seconds.'
             }), 400
 
-        # Step 3: Run AI Intelligence Analysis (NVIDIA -> Gemini -> Groq -> Sarvam)
         keys_dict = {
-            'nvidia': user_nvidia_key,
-            'gemini': user_gemini_key,
             'groq': user_groq_key,
+            'gemini': user_gemini_key,
+            'nvidia': user_nvidia_key,
             'sarvam': user_sarvam_key
         }
 
@@ -420,67 +399,105 @@ def analyze():
             sarvam_model=sarvam_model
         )
 
-        return jsonify({
+        lecture_id = generate_lecture_id()
+        response_payload = {
+            'lecture_id': lecture_id,
             'metadata': metadata,
             'transcript': transcript_data,
             'analysis': analysis_result,
             'engine': analysis_engine
-        })
+        }
+
+        try:
+            set_cached_analysis(video_id, response_payload)
+        except Exception as cache_err:
+            logging.warning("Failed to store analysis in Redis for %s: %s", video_id, cache_err)
+
+        return jsonify(response_payload)
 
     except Exception as e:
         logging.error("Analysis route error: %s", e, exc_info=True)
         return jsonify({'error': f'An unexpected error occurred while analyzing the lecture: {str(e)}'}), 500
 
+@app.route('/api/vault/recent', methods=['GET'])
+@app.route('/vault/recent', methods=['GET'])
+def get_recent_vault():
+    client = get_redis_client()
+    if not client:
+        return jsonify({'success': False, 'lectures': []})
+
+    try:
+        keys = client.keys('analysis:*')
+        lectures = []
+        for k in keys:
+            raw = client.get(k)
+            if raw:
+                data = json.loads(raw) if isinstance(raw, str) else raw
+                if data and isinstance(data, dict) and data.get('metadata') and data.get('analysis'):
+                    vid = data['metadata'].get('video_id') or k.replace('analysis:', '')
+                    stored_id = data.get('lecture_id') or generate_lecture_id()
+                    lectures.append({
+                        'lecture_id': stored_id,
+                        'metadata': data['metadata'],
+                        'transcript': data.get('transcript', {}),
+                        'analysis': data['analysis'],
+                        'engine': data.get('engine', 'Angkor AI')
+                    })
+        return jsonify({'success': True, 'lectures': lectures})
+    except Exception as e:
+        logging.warning("Error fetching recent vault from Redis: %s", e)
+        return jsonify({'success': False, 'error': str(e), 'lectures': []})
 
 @app.route('/api/sync/create', methods=['POST'])
 @app.route('/sync/create', methods=['POST'])
 def create_sync_code():
-    """Create a temporary 6-digit sync code for exporting/transferring data to another browser."""
     data = request.get_json(silent=True) or {}
     payload = data.get('payload')
     if not payload:
         return jsonify({'error': 'No payload provided for cross-browser sync.'}), 400
 
     import secrets
-    # 6-digit easy-to-type numeric code (100000 - 999999)
     code_raw = str(secrets.randbelow(900000) + 100000)
     formatted_code = f"{code_raw[:3]}-{code_raw[3:]}"
 
-    success = set_sync_payload(code_raw, payload, ttl_seconds=900)
-    if not success:
-        return jsonify({'error': 'Failed to initialize cross-browser sync code.'}), 500
+    vault_token = f"ak_v1_{secrets.token_hex(16)}"
+
+    ttl_seconds = 180
+    set_sync_payload(code_raw, payload, ttl_seconds=ttl_seconds)
+    set_sync_payload(formatted_code, payload, ttl_seconds=ttl_seconds)
+    set_sync_payload(vault_token, payload, ttl_seconds=ttl_seconds)
 
     return jsonify({
         'success': True,
         'code': formatted_code,
         'raw_code': code_raw,
-        'expires_in_seconds': 900
+        'vault_token': vault_token,
+        'expires_in_seconds': ttl_seconds
     })
-
 
 @app.route('/api/sync/fetch', methods=['GET', 'POST'])
 @app.route('/sync/fetch', methods=['GET', 'POST'])
 def fetch_sync_code():
-    """Fetch user data using a 6-digit sync code generated from another browser."""
     if request.method == 'POST':
         data = request.get_json(silent=True) or {}
-        code = data.get('code', '')
+        code = data.get('vault') or data.get('code') or ''
     else:
-        code = request.args.get('code', '')
+        code = request.args.get('vault') or request.args.get('code') or ''
 
-    cleaned_code = re.sub(r'[^a-zA-Z0-9]', '', str(code)).upper()
-    if not cleaned_code or len(cleaned_code) < 3:
-        return jsonify({'error': 'Please provide a valid 6-digit sync code or QR token.'}), 400
+    code_str = str(code).strip()
+    if not code_str:
+        return jsonify({'error': 'Please provide a valid sync code or encrypted vault token.'}), 400
 
-    raw_lookup = cleaned_code
-    if raw_lookup.startswith('AKQR'):
-        raw_lookup = raw_lookup[4:]
+    payload = get_sync_payload(code_str)
 
-    # Check direct code first
-    payload = get_sync_payload(raw_lookup) or get_sync_payload(cleaned_code)
-
-    # Fallback: If not found and might be a Hex QR token, decode Hex -> Binary -> Decimal
     if not payload:
+        clean_code = re.sub(r'[^a-zA-Z0-9_]', '', code_str)
+        payload = get_sync_payload(clean_code)
+
+    if not payload:
+        raw_lookup = re.sub(r'[^a-zA-Z0-9]', '', code_str).upper()
+        if raw_lookup.startswith('AKQR'):
+            raw_lookup = raw_lookup[4:]
         try:
             bin_str = bin(int(raw_lookup, 16))[2:]
             dec_num = str(int(bin_str, 2)).zfill(6)
@@ -490,15 +507,13 @@ def fetch_sync_code():
             pass
 
     if not payload:
-        return jsonify({'error': 'Sync code is invalid, expired (15m limit), or not found.'}), 404
+        return jsonify({'error': 'This sync link or code has expired (3-minute limit) or is invalid.'}), 404
 
     return jsonify({
         'success': True,
         'payload': payload
     })
 
-
-# Fallback Vercel Entrypoint Dispatcher (handles GET and POST if Vercel rewrote URL to /api/index)
 @app.route('/api/index', methods=['GET', 'POST'])
 @app.route('/api/index.py', methods=['GET', 'POST'])
 @app.route('/api', methods=['GET', 'POST'])
@@ -513,15 +528,16 @@ def vercel_entrypoint():
             return generate_pdf()
         elif 'payload' in data or data.get('sync_action') == 'create':
             return create_sync_code()
-        elif 'code' in data or data.get('sync_action') == 'fetch':
+        elif 'code' in data or 'vault' in data or data.get('sync_action') == 'fetch':
             return fetch_sync_code()
         return jsonify({'error': 'Unrecognized request payload'}), 400
 
-    if request.args.get('code'):
+    if 'recent' in request.path or request.args.get('vault_action') == 'recent':
+        return get_recent_vault()
+    if request.args.get('sync_action') == 'fetch' or (request.args.get('code') and request.path.startswith('/api/sync')):
         return fetch_sync_code()
 
     return render_template('index.html')
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

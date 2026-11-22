@@ -4,37 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Angkor AI - Video Intelligence Engine</title>
-    <!-- Favicon -->
+    
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}">
-    <!-- Google Fonts -->
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Feather Icons -->
+    
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-    <!-- Marked.js Markdown Parser -->
+    
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- DOMPurify HTML Sanitizer -->
+    
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-    <!-- KaTeX Math & LaTeX Renderer -->
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
-    <!-- html2pdf for Client-Side PDF Generation -->
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- QR Code Generator & Mobile Camera Scanner Engine -->
+    
     <script src="{{ url_for('static', filename='js/qrcode.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/html5-qrcode.min.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=4.1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=4.3">
 </head>
 <body>
+    <div id="topProgressStrip" class="top-progress-strip"></div>
     <div class="bg-grid"></div>
     <div class="bg-ambient-glow"></div>
 
-    <!-- Header Navbar (MetaCleaner Style) -->
+    
     <header class="navbar-header">
         <div class="navbar-container">
             <div class="navbar-left">
@@ -51,7 +52,7 @@
                 </a>
             </div>
 
-            <!-- Navbar Search (Visible when results are active) -->
+            
             <div id="topNavSearch" class="navbar-search" style="display: none;">
                 <form onsubmit="handleFormSubmit(event)" class="navbar-search-form">
                     <div class="input-group">
@@ -75,11 +76,11 @@
         </div>
     </header>
 
-    <!-- Sidebar Backdrop for Mobile Off-Canvas Drawer (Outside grid container) -->
+    
     <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
 
     <div class="app-container">
-        <!-- Sidebar: Video Lecture History -->
+        
         <aside id="sidebarDrawer">
             <div class="sidebar-header">
                 <div class="sidebar-title">
@@ -100,17 +101,12 @@
             </div>
         </aside>
 
-        <!-- Main Workspace -->
+        
         <main>
-            <!-- Hero Empty State (MetaCleaner Workspace Style) -->
+            
             <div id="heroSearch" class="workspace-hero">
                 <div class="workspace-header">
-                    <div class="status-meta-pill">
-                        <span class="status-indicator-dot active"></span>
-                        <span>Video Intelligence & Crux Engine</span>
-                    </div>
-                    <h1>Analyze Any Video</h1>
-                    <p>Cut through the fluff. Understand exactly what's happening, what's not, and the real ground reality in crisp English.</p>
+                    <h1>Angkor the video</h1>
                 </div>
 
                 <div class="search-box-card">
@@ -125,18 +121,9 @@
                         </div>
                     </form>
                 </div>
-
-                <div class="format-pills">
-                    <span class="format-pill">YOUTUBE</span>
-                    <span class="format-pill">GROUND REALITY</span>
-                    <span class="format-pill">WHAT'S HAPPENING</span>
-                    <span class="format-pill">WHAT'S NOT</span>
-                    <span class="format-pill">CRISP ENGLISH TL;DR</span>
-                    <span class="format-pill">LATEX FORMULAS</span>
-                </div>
             </div>
 
-            <!-- Loading Progress Stepper -->
+            
             <section class="loader-container" id="loaderContainer">
                 <div class="stepper">
                     <div class="step" id="step1">
@@ -162,90 +149,149 @@
                 </div>
             </section>
 
-            <!-- Results container -->
+            
             <section class="results-container" id="resultsContainer" style="display: none;">
-                <!-- Left Column: Video Player Card & Subtitle list -->
                 <div class="video-column">
-                    <!-- Video Card -->
                     <div class="video-card">
-                        <div class="thumbnail-container">
-                            <img src="" alt="Thumbnail" class="thumbnail-img" id="videoThumbnail">
-                            <span class="duration-badge" id="videoDuration">--:--</span>
+                        <div class="card-skeleton" id="videoCardSkeleton">
+                            <div class="skeleton-shimmer skeleton-thumb-box"></div>
+                            <div class="skeleton-details-box">
+                                <div class="skeleton-shimmer skeleton-line h-16 w-85"></div>
+                                <div class="skeleton-shimmer skeleton-line w-50"></div>
+                            </div>
                         </div>
-                        <div class="video-details">
-                            <h4 class="video-title" id="videoTitle">Video Title Loading...</h4>
-                            <div class="video-author">
-                                <i data-feather="user"></i>
-                                <span id="videoAuthor">Creator</span>
+                        <div class="card-real-content">
+                            <div class="thumbnail-container">
+                                <img src="" alt="Thumbnail" class="thumbnail-img" id="videoThumbnail">
+                                <span class="duration-badge" id="videoDuration">--:--</span>
+                            </div>
+                            <div class="video-details">
+                                <h4 class="video-title" id="videoTitle">Video Title Loading...</h4>
+                                <div class="video-author">
+                                    <i data-feather="user"></i>
+                                    <span id="videoAuthor">Creator</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Searchable transcript viewer -->
                     <div class="transcript-card">
-                        <div class="transcript-header">
-                            <h3>Interactive Transcript</h3>
+                        <div class="card-skeleton" id="transcriptCardSkeleton">
+                            <div class="skeleton-transcript-box">
+                                <div class="skeleton-shimmer skeleton-search-box"></div>
+                                <div class="skeleton-transcript-list">
+                                    <div class="skeleton-segment"><div class="skeleton-shimmer skeleton-time-pill"></div><div class="skeleton-shimmer skeleton-line w-80"></div></div>
+                                    <div class="skeleton-segment"><div class="skeleton-shimmer skeleton-time-pill"></div><div class="skeleton-shimmer skeleton-line w-65"></div></div>
+                                    <div class="skeleton-segment"><div class="skeleton-shimmer skeleton-time-pill"></div><div class="skeleton-shimmer skeleton-line w-90"></div></div>
+                                    <div class="skeleton-segment"><div class="skeleton-shimmer skeleton-time-pill"></div><div class="skeleton-shimmer skeleton-line w-75"></div></div>
+                                    <div class="skeleton-segment"><div class="skeleton-shimmer skeleton-time-pill"></div><div class="skeleton-shimmer skeleton-line w-85"></div></div>
+                                    <div class="skeleton-segment"><div class="skeleton-shimmer skeleton-time-pill"></div><div class="skeleton-shimmer skeleton-line w-60"></div></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="transcript-search-wrapper">
-                            <i data-feather="search"></i>
-                            <input type="text" class="transcript-search" id="transcriptSearch" placeholder="Search transcript..." oninput="handleTranscriptSearch()">
-                        </div>
-                        <div class="transcript-scroller" id="transcriptScroller">
-                            <!-- Loaded dynamically via JavaScript -->
+                        <div class="card-real-content" style="height: 100%; display: flex; flex-direction: column;">
+                            <div class="transcript-header">
+                                <h3>Interactive Transcript</h3>
+                            </div>
+                            <div class="transcript-search-wrapper">
+                                <i data-feather="search"></i>
+                                <input type="text" class="transcript-search" id="transcriptSearch" placeholder="Search transcript..." oninput="handleTranscriptSearch()">
+                            </div>
+                            <div class="transcript-scroller" id="transcriptScroller">
+                                
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column: AI Generated notebook -->
-                <!-- Right Column: AI Generated notebook & Interactive Chat -->
                 <div class="notes-card">
-                    <div class="notes-header">
-                        <!-- Navigation Tab Switcher -->
-                        <div class="view-tabs">
-                            <button class="view-tab active" id="tabNotesBtn" onclick="switchRightTab('notes')">
-                                <i data-feather="file-text"></i>
-                                <span>Executive Notes</span>
-                            </button>
-                            <button class="view-tab" id="tabChatBtn" onclick="switchRightTab('chat')">
-                                <i data-feather="message-square"></i>
-                                <span>Chat with Video</span>
-                                <span class="tab-badge">AI</span>
-                            </button>
-                        </div>
-                        <div class="notes-actions">
-                            <div class="notes-engine-tag" id="engineTag">
-                                <i data-feather="cpu"></i>
-                                <span id="engineLabel">NVIDIA NIM</span>
+                    <div class="card-skeleton" id="notesCardSkeleton">
+                        <div class="skeleton-notes-card">
+                            <div class="skeleton-notes-header-bar">
+                                <div class="skeleton-tabs-group">
+                                    <div class="skeleton-shimmer skeleton-tab-pill" style="width: 120px;"></div>
+                                    <div class="skeleton-shimmer skeleton-tab-pill" style="width: 130px;"></div>
+                                </div>
+                                <div class="skeleton-actions-group">
+                                    <div class="skeleton-shimmer skeleton-tab-pill" style="width: 90px;"></div>
+                                    <div class="skeleton-shimmer skeleton-tab-pill" style="width: 55px;"></div>
+                                </div>
                             </div>
-                            <button class="btn btn-primary btn-sm" onclick="downloadPDF()" id="downloadPdfBtn" title="Download formatted PDF report">
-                                <i data-feather="download"></i>
-                                <span>PDF</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- View 1: Rendered Markdown Body -->
-                    <div class="markdown-body tab-content-view active" id="notesMarkdown">
-                        <!-- Loaded dynamically via JavaScript -->
-                    </div>
-
-                    <!-- View 2: Interactive Temporary Chat with Video -->
-                    <div class="chat-body tab-content-view" id="chatContainer">
-                        <!-- Chat Message Thread -->
-                        <div class="chat-messages" id="chatMessages">
-                            <div class="chat-empty-state" id="chatEmptyState">
-                                <span>Temporary Chats</span>
+                            <div class="skeleton-notes-body-flow">
+                                <div class="skeleton-shimmer skeleton-line h-20 w-40"></div>
+                                <div class="skeleton-shimmer skeleton-line w-95"></div>
+                                <div class="skeleton-shimmer skeleton-line w-90"></div>
+                                <div class="skeleton-shimmer skeleton-line w-80"></div>
+                                <div class="skeleton-shimmer skeleton-line w-65"></div>
+                                <div style="height: 10px;"></div>
+                                <div class="skeleton-shimmer skeleton-line h-16 w-30"></div>
+                                <div class="skeleton-shimmer skeleton-line w-95"></div>
+                                <div class="skeleton-shimmer skeleton-line w-85"></div>
+                                <div class="skeleton-shimmer skeleton-line w-75"></div>
+                                <div style="height: 10px;"></div>
+                                <div class="skeleton-shimmer skeleton-line h-16 w-35"></div>
+                                <div class="skeleton-shimmer skeleton-line w-90"></div>
+                                <div class="skeleton-shimmer skeleton-line w-80"></div>
                             </div>
                         </div>
-
-                        <!-- Chat Input Box -->
-                        <div class="chat-input-wrapper">
-                            <form id="chatForm" onsubmit="handleSendChatMessage(event)" class="chat-input-form">
-                                <input type="text" id="chatInput" placeholder="Ask a question about this video..." autocomplete="off">
-                                <button type="submit" id="chatSendBtn" class="chat-send-btn" title="Send message">
-                                    <i data-feather="send"></i>
+                    </div>
+                    <div class="card-real-content" style="height: 100%; display: flex; flex-direction: column;">
+                        <div class="notes-header">
+                            <div class="view-tabs">
+                                <button class="view-tab active" id="tabNotesBtn" onclick="switchRightTab('notes')">
+                                    <i data-feather="file-text"></i>
+                                    <span id="tabNotesLabel">Executive Notes</span>
                                 </button>
-                            </form>
+                                <button class="view-tab" id="tabChatBtn" onclick="switchRightTab('chat')">
+                                    <i data-feather="message-square"></i>
+                                    <span id="tabChatLabel">Chat with Video</span>
+                                    <span class="tab-badge" id="tabChatBadge">AI</span>
+                                </button>
+                            </div>
+                            <div class="notes-actions">
+                                <div class="notes-engine-tag" id="engineTag">
+                                    <i data-feather="cpu"></i>
+                                    <span id="engineLabel">NVIDIA NIM</span>
+                                </div>
+                                <button class="btn btn-primary btn-sm" onclick="downloadPDF()" id="downloadPdfBtn" title="Download formatted PDF report">
+                                    <i data-feather="download"></i>
+                                    <span>PDF</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="notes-body-skeleton" id="notesBodySkeleton" style="display: none;">
+                            <div class="skeleton-shimmer skeleton-line h-20 w-40"></div>
+                            <div class="skeleton-shimmer skeleton-line w-95"></div>
+                            <div class="skeleton-shimmer skeleton-line w-90"></div>
+                            <div class="skeleton-shimmer skeleton-line w-80"></div>
+                            <div class="skeleton-shimmer skeleton-line w-65"></div>
+                            <div style="height: 10px;"></div>
+                            <div class="skeleton-shimmer skeleton-line h-16 w-30"></div>
+                            <div class="skeleton-shimmer skeleton-line w-95"></div>
+                            <div class="skeleton-shimmer skeleton-line w-85"></div>
+                            <div class="skeleton-shimmer skeleton-line w-75"></div>
+                        </div>
+
+                        <div class="markdown-body tab-content-view active" id="notesMarkdown">
+                            
+                        </div>
+
+                        <div class="chat-body tab-content-view" id="chatContainer">
+                            <div class="chat-messages" id="chatMessages">
+                                <div class="chat-empty-state" id="chatEmptyState">
+                                    <span>Temporary Chats</span>
+                                </div>
+                            </div>
+
+                            <div class="chat-input-wrapper">
+                                <form id="chatForm" onsubmit="handleSendChatMessage(event)" class="chat-input-form">
+                                    <input type="text" id="chatInput" placeholder="Ask a question about this video..." autocomplete="off">
+                                    <button type="submit" id="chatSendBtn" class="chat-send-btn" title="Send message">
+                                        <i data-feather="send"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -253,17 +299,15 @@
         </main>
     </div>
 
-    <!-- Footer Bar -->
+    
     <footer class="footer-bar">
         <p>Angkor AI &bull; Video Intelligence & Crux Engine</p>
     </footer>
 
-
-
-    <!-- Settings & Cross-Browser Data Vault Modal -->
+    
     <div class="data-modal-backdrop" id="dataModalBackdrop" onclick="handleDataModalBackdropClick(event)">
         <div class="data-modal-card compact-card" id="dataModalCard" role="dialog" aria-modal="true" aria-labelledby="dataModalTitle">
-            <!-- Header -->
+            
             <div class="data-modal-header compact-header">
                 <div class="modal-title-group">
                     <div class="modal-badge-icon compact-icon">
@@ -279,7 +323,7 @@
                 </button>
             </div>
 
-            <!-- Modal Tabs (Export & Import) -->
+            
             <div class="modal-tabs compact-tabs">
                 <button class="modal-tab active" id="tabExportBtn" onclick="switchDataModalTab('export')">
                     <i data-feather="upload-cloud"></i>
@@ -291,58 +335,67 @@
                 </button>
             </div>
 
-            <!-- Tab 1: Export Content -->
+            
             <div class="modal-tab-content compact-content active" id="exportTabContent">
-                <!-- Small Compact Saved Lectures Box -->
+                
                 <div class="mini-summary-pill">
                     <i data-feather="database"></i>
                     <span><strong id="exportLecturesCount">0</strong> Saved Lectures &bull; <span id="exportDataSize">0 KB</span></span>
                 </div>
 
                 <div class="export-actions-row">
-                    <button class="btn btn-primary" style="flex: 1; min-width: 150px; justify-content: center; gap: 8px; padding: 10px 14px;" onclick="exportDataToAngkorBinary()" id="exportBinaryBtn">
+                    <button class="btn btn-primary" onclick="exportDataToAngkorBinary()" id="exportBinaryBtn" style="flex: 1; justify-content: center;">
                         <i data-feather="download"></i>
                         <span>Download .angkor File</span>
                     </button>
-                    <button class="btn btn-secondary" style="flex: 1; min-width: 150px; justify-content: center; gap: 8px; padding: 10px 14px;" onclick="generateSyncCode()" id="generateSyncBtn">
+                    <button class="btn btn-secondary" onclick="generateSyncCode()" id="generateSyncBtn" style="flex: 1; justify-content: center;">
                         <i data-feather="grid"></i>
                         <span>Generate Code & QR</span>
                     </button>
                 </div>
 
-                <!-- Generated 6-digit sync code & QR display area (appears on click) -->
+                
                 <div id="syncCodeGeneratedArea" style="display: none; flex-direction: column; gap: 8px; margin-top: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Temporary Sync Code:</span>
                         <div class="code-timer-bar">
                             <i data-feather="clock"></i>
-                            <span id="codeTimerCountdown">Valid for 15 mins</span>
+                            <span id="codeTimerCountdown">Valid for 3 mins</span>
                         </div>
                     </div>
 
                     <div class="code-display-container" style="margin: 4px 0;">
                         <div class="code-value" id="generatedCodeDisplay">--- ---</div>
-                        <button class="btn-copy-code" onclick="copySyncCode()" id="copySyncCodeBtn" title="Copy sync code">
+                        <button class="btn-copy-code" onclick="copySyncCode()" id="copySyncCodeBtn" title="Copy 6-digit code">
                             <i data-feather="copy" id="copyCodeIcon"></i>
-                            <span id="copyCodeText">Copy</span>
+                            <span id="copyCodeText">Copy Code</span>
                         </button>
                     </div>
 
-                    <!-- Secure QR Code Box (Decimal -> Binary -> Hex Encoded) -->
-                    <div class="sync-qr-wrapper" style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; background: rgba(0, 0, 0, 0.45); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin: 4px 0;">
+                    
+                    <div class="sync-qr-wrapper" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px; background: rgba(0, 0, 0, 0.45); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin: 4px 0;">
                         <div id="syncQrCodeContainer" class="sync-qr-container"></div>
-                        <div style="text-align: center;">
-                            <span style="font-size: 0.7rem; color: var(--text-primary); font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
-                                <i data-feather="shield" style="width: 11px; height: 11px;"></i>
-                                Decimal &rarr; Binary &rarr; Hex Token:
+                        <div style="text-align: center; width: 100%;">
+                            <span style="font-size: 0.7rem; color: #a5b4fc; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
+                                <i data-feather="lock" style="width: 11px; height: 11px;"></i>
+                                Encrypted Direct Link (3m auto-destruct)
                             </span>
-                            <div id="qrHexBadge" style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #a5b4fc; font-weight: 600; letter-spacing: 1px; margin-top: 2px;">AKQR:------</div>
+                            <div style="display: flex; gap: 8px; justify-content: center; margin-top: 6px; flex-wrap: wrap;">
+                                <button class="btn-copy-code" onclick="copyEncryptedVaultLink()" id="copyVaultLinkBtn" title="Copy encrypted link to share">
+                                    <i data-feather="link" id="copyLinkIcon" style="width: 12px; height: 12px;"></i>
+                                    <span id="copyLinkText">Copy Link</span>
+                                </button>
+                                <button class="btn-copy-code" onclick="downloadQrImage()" id="downloadQrBtn" title="Save QR Image to share on WhatsApp or Email">
+                                    <i data-feather="download" id="downloadQrIcon" style="width: 12px; height: 12px;"></i>
+                                    <span id="downloadQrText">Save QR Image</span>
+                                </button>
+                            </div>
                         </div>
-                        <span style="font-size: 0.68rem; color: var(--text-muted); text-align: center;">Scan with your mobile phone camera to sync automatically</span>
+                        <span style="font-size: 0.68rem; color: var(--text-muted); text-align: center;">Scan with any phone camera or open link to auto-download all notes</span>
                     </div>
 
                     <p style="font-size: 0.72rem; color: var(--text-secondary); margin: 0; line-height: 1.4;">
-                        Enter this code or scan the QR code on your mobile browser to transfer all notes instantly.
+                        Share the QR code image or encrypted link. The receiver will get all your notes instantly without seeing any code.
                     </p>
                 </div>
 
@@ -354,25 +407,25 @@
                 </div>
             </div>
 
-            <!-- Tab 2: Import Content -->
+            
             <div class="modal-tab-content compact-content" id="importTabContent" style="display: none;">
                 <div class="session-id-notice compact">
                     <i data-feather="info"></i>
                     <span>Restores notes & transcripts. Each lecture gets a <strong>fresh unique session ID</strong> in this browser.</span>
                 </div>
 
-                <!-- Mobile-Only Camera QR Scanner Button (Hidden on Desktop, Visible on Mobile) -->
+                
                 <div class="mobile-only-qr-section">
                     <button class="btn btn-primary btn-block mobile-qr-scan-btn" onclick="startQrScanner()">
                         <i data-feather="camera"></i>
                         <span>Scan QR Code with Camera</span>
                     </button>
-                    <!-- Native Camera capture input (bypasses browser HTTP origin restriction on 10.16.x IP) -->
+                    
                     <input type="file" id="qrCameraPhotoInput" accept="image/*" capture="environment" style="display: none;" onchange="handleQrPhotoSelected(event)">
                     <div class="divider-text"><span>OR ENTER MANUALLY</span></div>
                 </div>
 
-                <!-- Option A: 6-Digit Sync Code Input -->
+                
                 <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
                     <label style="font-size: 0.74rem; color: var(--text-secondary); font-weight: 500;">
                         <i data-feather="zap" style="width: 13px; height: 13px; vertical-align: middle; margin-right: 3px;"></i>
@@ -380,21 +433,20 @@
                     </label>
                     <div class="code-input-row">
                         <input type="text" id="syncCodeInput" class="sync-code-input" placeholder="e.g. 617-254" maxlength="7" autocomplete="off" oninput="formatCodeInput(this)">
-                        <button class="btn btn-primary" onclick="fetchFromSyncCode()" id="fetchSyncBtn" style="padding: 0 16px;">
+                        <button class="btn btn-primary" onclick="fetchFromSyncCode()" id="fetchSyncBtn" style="padding: 0 16px;" title="Fetch Code">
                             <i data-feather="download-cloud"></i>
-                            <span>Fetch Code</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Option B: Dropzone for .angkor binary file -->
+                
                 <div class="dropzone compact-dropzone" id="importDropzone" onclick="triggerFileInput()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" style="padding: 12px 14px; margin-bottom: 8px;">
                     <i data-feather="file" class="dropzone-icon" style="width: 18px; height: 18px;"></i>
                     <span class="dropzone-text" style="font-size: 0.76rem;">Option 2: Click or drag <strong>.angkor</strong> binary file here</span>
                     <input type="file" id="importFileInput" accept=".angkor,application/octet-stream" style="display: none;" onchange="handleFileSelected(event)">
                 </div>
 
-                <!-- Option C: Paste text / code string directly -->
+                
                 <details class="paste-details" style="font-size: 0.72rem;">
                     <summary style="cursor: pointer; color: var(--text-muted); font-size: 0.72rem;">Option 3: Or paste raw backup code / JSON string</summary>
                     <textarea id="importPasteText" class="paste-textarea" placeholder="Paste your exported .angkor code string or JSON text here..." rows="2" style="font-size: 0.7rem;"></textarea>
@@ -404,7 +456,7 @@
                     </button>
                 </details>
 
-                <!-- Preview and Confirmation Box (Shown once file or code is parsed) -->
+                
                 <div id="importPreviewArea" class="import-preview-box compact" style="display: none; margin-top: 10px;">
                     <div class="preview-header">
                         <span class="preview-title" id="previewSummaryText">Found 0 lectures</span>
@@ -438,7 +490,7 @@
         </div>
     </div>
 
-    <!-- Mobile Camera QR Scanner Overlay Modal -->
+    
     <div class="qr-scanner-backdrop" id="qrScannerBackdrop" style="display: none;" onclick="handleQrScannerBackdropClick(event)">
         <div class="qr-scanner-card" role="dialog" aria-modal="true" aria-labelledby="qrScannerTitle">
             <div class="qr-scanner-header">
@@ -467,26 +519,23 @@
         </div>
     </div>
 
-    <!-- Notification Toast -->
+    
     <div class="toast" id="toast">
         <i data-feather="info" id="toastIcon"></i>
         <span id="toastMessage">Default toast message</span>
     </div>
 
     <script>
-        // Global State & History Storage
-        let configData = {};
         let activeAnalysis = null;
         let lectureHistory = [];
 
-        // App Initialisation
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             feather.replace();
-            loadHistoryFromStorage();
+            await loadHistoryFromStorage();
             initializeFromURL();
+            checkUrlForEncryptedVault();
         });
 
-        // Listen for browser Back/Forward buttons
         window.addEventListener('popstate', () => {
             initializeFromURL();
         });
@@ -501,20 +550,21 @@
                     const foundItem = lectureHistory.find(item => item.lecture_id === lectureId);
                     if (foundItem) {
                         loadHistoryItem(foundItem, false);
+                        return;
                     } else {
-                        // ID not found, reset to new
                         window.history.replaceState({}, '', '/home/new');
                         startNewLecture(false);
+                        return;
                     }
                 } else if (lectureId === 'new') {
                     startNewLecture(false);
+                    return;
                 }
-            } else {
-                startNewLecture(false);
             }
+            
+            startNewLecture(false);
         }
 
-        // Toast Helper
         function showToast(message, type = 'info') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
@@ -523,7 +573,6 @@
             toastMessage.textContent = message;
             toast.className = 'toast show ' + type;
             
-            // Icon customization
             if (type === 'error') {
                 toastIcon.setAttribute('data-feather', 'alert-circle');
             } else if (type === 'success') {
@@ -538,23 +587,335 @@
             }, 4000);
         }
 
-
-        // Stepper animation controller
         function updateStepperProgress(activeStepIndex, message) {
-            document.getElementById('loadingMessage').textContent = message;
+            const msgEl = document.getElementById('loadingMessage');
+            if (msgEl) msgEl.textContent = message;
             for (let i = 1; i <= 4; i++) {
                 const step = document.getElementById('step' + i);
-                if (i < activeStepIndex) {
-                    step.className = 'step completed';
-                } else if (i === activeStepIndex) {
-                    step.className = 'step active';
-                } else {
-                    step.className = 'step';
+                if (step) {
+                    if (i < activeStepIndex) {
+                        step.className = 'step completed';
+                    } else if (i === activeStepIndex) {
+                        step.className = 'step active';
+                    } else {
+                        step.className = 'step';
+                    }
                 }
             }
         }
 
-        // Submits YouTube Link for Analysis
+        function generate50012DemoPayload() {
+            const dummyAnalysis = `### EXPERIMENTAL CODE 50012 DEMO
+
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+
+- a b c d e f g h i j k l m
+- a b c d e f g h i j k l m n o p q
+- a b c d e f g h i j k l m 1 2 3 4 5
+
+### WHAT IS HAPPENING (EXPERIMENTAL DUMMY)
+a b c d e f g h i j k l m n o p q r s t u v w x y z. a b c d e f g h i j k l m.
+a b c d e f g h i j k l m n o p q r s t u v w x y z 1 2 3 4 5 6 7 8 9 0.
+
+### WHAT IS NOT HAPPENING
+a b c d e f g h i j k l m - no youtube api called.
+a b c d e f g h i j k l m n o p q r s t u v w x y z.`;
+
+            const dummyTranscriptText = "00:00 a b c d e f g 1 2 3 4 5\n00:05 h i j k l m n 6 7 8 9 10\n00:10 o p q r s t u 11 12 13 14 15\n00:15 v w x y z 16 17 18 19 20\n00:20 a b c d e f g h i j k l m 1 2 3 4 5";
+            const dummySegments = [
+                { start: 0, text: "a b c d e f g 1 2 3 4 5" },
+                { start: 5, text: "h i j k l m n 6 7 8 9 10" },
+                { start: 10, text: "o p q r s t u 11 12 13 14 15" },
+                { start: 15, text: "v w x y z 16 17 18 19 20" },
+                { start: 20, text: "a b c d e f g h i j k l m 1 2 3 4 5" }
+            ];
+
+            return {
+                lecture_id: generateLectureId(),
+                metadata: {
+                    video_id: 'exp_50012',
+                    title: 'Code 50012 Experimental: Live Flow Test',
+                    author: 'Experimental Sandbox',
+                    duration: 25
+                },
+                transcript: {
+                    text: dummyTranscriptText,
+                    segments: dummySegments
+                },
+                analysis: dummyAnalysis,
+                engine: 'Experimental 50012 Flow'
+            };
+        }
+
+        function renderTranscriptSegments(segments) {
+            const transcriptContainer = document.getElementById('transcriptScroller');
+            if (!transcriptContainer) return;
+            transcriptContainer.innerHTML = '';
+            if (!segments || segments.length === 0) {
+                transcriptContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px;">No transcript segments found.</div>`;
+                return;
+            }
+            segments.forEach(seg => {
+                const segDiv = document.createElement('div');
+                segDiv.className = 'transcript-segment';
+                segDiv.onclick = () => seekToTimestamp(seg.start);
+                
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'timestamp';
+                timeSpan.textContent = formatDuration(seg.start);
+
+                const textSpan = document.createElement('span');
+                textSpan.textContent = seg.text;
+
+                segDiv.appendChild(timeSpan);
+                segDiv.appendChild(textSpan);
+                transcriptContainer.appendChild(segDiv);
+            });
+        }
+
+        function setTopProgressStrip(percent) {
+            const strip = document.getElementById('topProgressStrip');
+            if (!strip) return;
+            if (percent > 0) {
+                strip.classList.add('active');
+                strip.style.width = percent + '%';
+            } else {
+                strip.style.width = '0%';
+                strip.classList.remove('active');
+            }
+        }
+
+        function finishTopProgressStrip() {
+            const strip = document.getElementById('topProgressStrip');
+            if (!strip) return;
+            strip.style.width = '100%';
+            setTimeout(() => {
+                strip.style.opacity = '0';
+                setTimeout(() => {
+                    strip.classList.remove('active');
+                    strip.style.width = '0%';
+                    strip.style.opacity = '1';
+                }, 300);
+            }, 400);
+        }
+
+        function hideAllSkeletons() {
+            setTopProgressStrip(0);
+            const vc = document.querySelector('.video-card');
+            const tc = document.querySelector('.transcript-card');
+            const nc = document.querySelector('.notes-card');
+            const nbs = document.getElementById('notesBodySkeleton');
+            const nmd = document.getElementById('notesMarkdown');
+
+            if (vc) vc.classList.remove('skeleton-active', 'card-ambient-active');
+            if (tc) tc.classList.remove('skeleton-active', 'card-ambient-active');
+            if (nc) nc.classList.remove('skeleton-active', 'card-ambient-active');
+            if (nbs) {
+                nbs.classList.remove('active');
+                nbs.style.display = 'none';
+            }
+            if (nmd) nmd.style.display = 'block';
+        }
+
+        function initProgressivePipeline() {
+            setTopProgressStrip(10);
+            const resultsContainer = document.getElementById('resultsContainer');
+            if (resultsContainer) {
+                resultsContainer.style.display = 'grid';
+            }
+
+            const vc = document.querySelector('.video-card');
+            const tc = document.querySelector('.transcript-card');
+            const nc = document.querySelector('.notes-card');
+            const nbs = document.getElementById('notesBodySkeleton');
+            const nmd = document.getElementById('notesMarkdown');
+
+            if (vc) {
+                vc.classList.add('skeleton-active', 'card-ambient-active');
+            }
+            if (tc) {
+                tc.classList.add('skeleton-active');
+                tc.classList.remove('card-ambient-active');
+            }
+            if (nc) {
+                nc.classList.add('skeleton-active');
+                nc.classList.remove('card-ambient-active');
+            }
+            if (nbs) {
+                nbs.classList.remove('active');
+                nbs.style.display = 'none';
+            }
+            if (nmd) nmd.style.display = 'none';
+        }
+
+        function setPipelineStep(step, data = null) {
+            const vc = document.querySelector('.video-card');
+            const tc = document.querySelector('.transcript-card');
+            const nc = document.querySelector('.notes-card');
+            const nbs = document.getElementById('notesBodySkeleton');
+            const nmd = document.getElementById('notesMarkdown');
+
+            if (step === 1) {
+                setTopProgressStrip(25);
+                if (vc) {
+                    vc.classList.add('skeleton-active', 'card-ambient-active');
+                }
+                if (tc) {
+                    tc.classList.add('skeleton-active');
+                    tc.classList.remove('card-ambient-active');
+                }
+                if (nc) {
+                    nc.classList.add('skeleton-active');
+                    nc.classList.remove('card-ambient-active');
+                }
+                if (nbs) {
+                    nbs.classList.remove('active');
+                    nbs.style.display = 'none';
+                }
+                if (nmd) nmd.style.display = 'none';
+            } else if (step === 2) {
+                setTopProgressStrip(55);
+                if (data && data.metadata) {
+                    const thumb = document.getElementById('videoThumbnail');
+                    if (thumb) thumb.src = data.metadata.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=60';
+                    const dur = document.getElementById('videoDuration');
+                    if (dur) dur.textContent = formatDuration(data.metadata.duration);
+                    const title = document.getElementById('videoTitle');
+                    if (title) title.textContent = data.metadata.title;
+                    const author = document.getElementById('videoAuthor');
+                    if (author) author.textContent = data.metadata.author;
+                }
+                if (vc) {
+                    vc.classList.remove('skeleton-active', 'card-ambient-active');
+                    const realContent = vc.querySelector('.card-real-content');
+                    if (realContent) realContent.classList.add('fade-in-content');
+                }
+                if (tc) {
+                    tc.classList.add('skeleton-active', 'card-ambient-active');
+                }
+                if (nc) {
+                    nc.classList.add('skeleton-active');
+                    nc.classList.remove('card-ambient-active');
+                }
+                if (nbs) {
+                    nbs.classList.remove('active');
+                    nbs.style.display = 'none';
+                }
+                if (nmd) nmd.style.display = 'none';
+            } else if (step === 3) {
+                setTopProgressStrip(85);
+                if (data && data.transcript) {
+                    renderTranscriptSegments(data.transcript.segments || []);
+                }
+                if (tc) {
+                    tc.classList.remove('skeleton-active', 'card-ambient-active');
+                    const realContent = tc.querySelector('.card-real-content');
+                    if (realContent) realContent.classList.add('fade-in-content');
+                }
+                if (nc) {
+                    nc.classList.remove('skeleton-active');
+                    nc.classList.add('card-ambient-active');
+                    const realContent = nc.querySelector('.card-real-content');
+                    if (realContent) realContent.classList.add('fade-in-content');
+                }
+                if (data && data.engine) {
+                    const engineLabel = document.getElementById('engineLabel');
+                    if (engineLabel) engineLabel.textContent = data.engine;
+                }
+                if (nbs) {
+                    nbs.classList.add('active');
+                    nbs.style.display = 'flex';
+                }
+                if (nmd) nmd.style.display = 'none';
+            } else if (step === 4) {
+                finishTopProgressStrip();
+                if (nc) nc.classList.remove('card-ambient-active');
+                if (nbs) {
+                    nbs.classList.remove('active');
+                    nbs.style.display = 'none';
+                }
+                if (nmd) nmd.style.display = 'block';
+            }
+        }
+
+        function typeWriterText(element, text, speed = 20) {
+            return new Promise((resolve) => {
+                if (!element) return resolve();
+                element.textContent = '';
+                let i = 0;
+                function tick() {
+                    if (i < text.length) {
+                        element.textContent += text.charAt(i);
+                        i++;
+                        setTimeout(tick, speed);
+                    } else {
+                        resolve();
+                    }
+                }
+                tick();
+            });
+        }
+
+        let progressiveStreamTimer = null;
+
+        function progressiveTextStream(container, htmlContent, onComplete) {
+            if (progressiveStreamTimer) {
+                clearTimeout(progressiveStreamTimer);
+                progressiveStreamTimer = null;
+            }
+            container.innerHTML = '';
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            const nodes = Array.from(tempDiv.children);
+
+            if (nodes.length === 0) {
+                container.innerHTML = htmlContent;
+                if (typeof onComplete === 'function') onComplete();
+                return;
+            }
+
+            let idx = 0;
+            function appendNextBlock() {
+                if (idx < nodes.length) {
+                    const el = nodes[idx].cloneNode(true);
+                    el.classList.add('fade-in-content');
+                    container.appendChild(el);
+                    container.scrollTop = container.scrollHeight;
+                    idx++;
+                    progressiveStreamTimer = setTimeout(appendNextBlock, 65);
+                } else {
+                    progressiveStreamTimer = null;
+                    if (typeof onComplete === 'function') onComplete();
+                }
+            }
+            appendNextBlock();
+        }
+
+        function runExperimental50012Simulation(submitBtn) {
+            const demoData = generate50012DemoPayload();
+            initProgressivePipeline(false);
+            setPipelineStep(1, demoData);
+
+            const timeline = [
+                { delay: 3200, fn: () => {
+                    setPipelineStep(2, demoData);
+                }},
+                { delay: 6800, fn: () => {
+                    setPipelineStep(3, demoData);
+                }},
+                { delay: 10500, fn: () => {
+                    saveToLocalStorageHistory(demoData);
+                    renderAnalysisResults(demoData, true);
+                    if (submitBtn) submitBtn.disabled = false;
+                }}
+            ];
+
+            timeline.forEach(item => {
+                setTimeout(item.fn, item.delay);
+            });
+        }
+
         async function handleFormSubmit(e) {
             e.preventDefault();
             const urlInput = e.target.querySelector('[name="youtubeUrl"]');
@@ -566,41 +927,39 @@
             const topNavSearch = document.getElementById('topNavSearch');
             const heroSearch = document.getElementById('heroSearch');
 
-            // Form validations
             if (!url) return;
 
             const wasHeroSearchVisible = (heroSearch.style.display !== 'none');
 
-            // Update UI State: Hide hero, show top nav search
             heroSearch.style.display = 'none';
             topNavSearch.style.display = 'flex';
             
-            // Sync URL to top nav if submitted from hero
             if (urlInput !== topNavSearch.querySelector('[name="youtubeUrl"]')) {
                 topNavSearch.querySelector('[name="youtubeUrl"]').value = url;
             }
 
-            // Reset results states
             submitBtn.disabled = true;
-            resultsContainer.style.display = 'none';
-            loaderContainer.style.display = 'flex';
-            
-            updateStepperProgress(1, "Validating YouTube URL & getting video metadata...");
+
+            if (url === '50012') {
+                runExperimental50012Simulation(submitBtn);
+                return;
+            }
+
+            initProgressivePipeline();
+            setPipelineStep(1);
 
             let progressInterval = null;
 
             try {
-                // Step 1: Request Analysis from Flask
-                // We'll dynamically trigger the progress messages based on estimated completion times
                 progressInterval = setInterval(() => {
                     const currentStep = document.querySelector('.step.active');
                     if (!currentStep) return;
                     
                     const stepId = currentStep.id;
                     if (stepId === 'step1') {
-                        updateStepperProgress(2, "URL is valid. Fetching lecture subtitles/transcripts...");
+                        setPipelineStep(2);
                     } else if (stepId === 'step2') {
-                        updateStepperProgress(3, "Subtitles acquired. Analyzing lecture transcript with AI... This may take up to 30s.");
+                        setPipelineStep(3);
                     }
                 }, 4000);
 
@@ -623,15 +982,15 @@
                     throw new Error(data.error || "An error occurred during video analysis.");
                 }
 
-                updateStepperProgress(4, "Formatting structured output & rendering notes...");
+                setPipelineStep(2, data);
                 setTimeout(() => {
-                    renderAnalysisResults(data);
-                    saveToLocalStorageHistory(data);
-                    loaderContainer.style.display = 'none';
-                    resultsContainer.style.display = 'grid';
-                    submitBtn.disabled = false;
-                    showToast("Lecture analysis complete!", "success");
-                }, 800);
+                    setPipelineStep(3, data);
+                    setTimeout(() => {
+                        saveToLocalStorageHistory(data);
+                        renderAnalysisResults(data, true);
+                        submitBtn.disabled = false;
+                    }, 800);
+                }, 600);
 
             } catch (err) {
                 console.error(err);
@@ -639,10 +998,11 @@
                     clearInterval(progressInterval);
                     progressInterval = null;
                 }
+                hideAllSkeletons();
                 loaderContainer.style.display = 'none';
+                resultsContainer.style.display = 'none';
                 submitBtn.disabled = false;
 
-                // Restore hero search if no results are visible
                 if (!activeAnalysis && wasHeroSearchVisible) {
                     heroSearch.style.display = 'flex';
                     topNavSearch.style.display = 'none';
@@ -650,7 +1010,6 @@
 
                 showToast(err.message || "Failed to analyze video. Connection error.", "error");
                 
-                // Automatically refresh/reset the page if the video was refused
                 if (err.message && err.message.includes("too long")) {
                     setTimeout(() => {
                         startNewLecture();
@@ -659,9 +1018,13 @@
             }
         }
 
-        // Format Duration (seconds to hh:mm:ss)
         function formatDuration(sec) {
-            if (!sec) return "--:--";
+            if (sec === null || sec === undefined || sec === '') return "--:--";
+            if (typeof sec === 'string') {
+                if (sec.includes(':')) return sec;
+                sec = parseFloat(sec);
+                if (isNaN(sec)) return "--:--";
+            }
             const hrs = Math.floor(sec / 3600);
             const mins = Math.floor((sec % 3600) / 60);
             const secs = Math.floor(sec % 60);
@@ -672,7 +1035,6 @@
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
 
-        // Render LaTeX equations in a DOM element via KaTeX
         function renderLatexInElement(element) {
             if (!element) return;
             const tryRender = () => {
@@ -697,34 +1059,25 @@
             if (typeof renderMathInElement === 'function') {
                 tryRender();
             } else {
-                // If defer scripts are still loading, wait slightly
                 setTimeout(tryRender, 200);
             }
         }
 
-        // Render response data into results UI
-        function renderAnalysisResults(data) {
+        function renderAnalysisResults(data, animateProgressive = false) {
             activeAnalysis = data;
 
-            // Render Video Details
+            hideAllSkeletons();
+            const resultsContainer = document.getElementById('resultsContainer');
+            if (resultsContainer) resultsContainer.style.display = 'grid';
+
             const metadata = data.metadata;
             document.getElementById('videoThumbnail').src = metadata.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=60';
             document.getElementById('videoDuration').textContent = formatDuration(metadata.duration);
             document.getElementById('videoTitle').textContent = metadata.title;
             document.getElementById('videoAuthor').textContent = metadata.author;
 
-            // Render Engine Name Tag
             document.getElementById('engineLabel').textContent = data.engine || 'Sarvam AI';
 
-            // Render AI Markdown (Sanitized against XSS)
-            const mdContainer = document.getElementById('notesMarkdown');
-            const rawMarkdown = marked.parse(data.analysis || '');
-            mdContainer.innerHTML = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawMarkdown) : rawMarkdown;
-
-            // Render LaTeX / Math via KaTeX auto-render
-            renderLatexInElement(mdContainer);
-
-            // Reset chat history and switch back to Notes view on new analysis
             currentChatHistory = [];
             switchRightTab('notes');
             const chatMessagesContainer = document.getElementById('chatMessages');
@@ -736,37 +1089,66 @@
                 `;
             }
 
-            // Render Transcript list
-            const transcriptContainer = document.getElementById('transcriptScroller');
-            transcriptContainer.innerHTML = '';
-
-            const segments = data.transcript.segments || [];
-            if (segments.length === 0) {
-                transcriptContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px;">No transcript segments found.</div>`;
-            } else {
-                segments.forEach(seg => {
-                    const segDiv = document.createElement('div');
-                    segDiv.className = 'transcript-segment';
-                    segDiv.onclick = () => seekToTimestamp(seg.start);
-                    
-                    const timeSpan = document.createElement('span');
-                    timeSpan.className = 'timestamp';
-                    timeSpan.textContent = formatDuration(seg.start);
-
-                    const textSpan = document.createElement('span');
-                    textSpan.textContent = seg.text;
-
-                    segDiv.appendChild(timeSpan);
-                    segDiv.appendChild(textSpan);
-                    transcriptContainer.appendChild(segDiv);
-                });
-            }
-            
+            renderTranscriptSegments((data.transcript && data.transcript.segments) ? data.transcript.segments : []);
             document.getElementById('transcriptSearch').value = '';
+
+            const mdContainer = document.getElementById('notesMarkdown');
+            const rawMarkdown = marked.parse(data.analysis || '');
+            const sanitizedHtml = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawMarkdown) : rawMarkdown;
+
+            const tabNotesLabel = document.getElementById('tabNotesLabel');
+            const tabChatLabel = document.getElementById('tabChatLabel');
+            const tabChatBadge = document.getElementById('tabChatBadge');
+
+            if (!animateProgressive) {
+                if (tabNotesLabel) tabNotesLabel.textContent = "Executive Notes";
+                if (tabChatLabel) tabChatLabel.textContent = "Chat with Video";
+                if (tabChatBadge) tabChatBadge.style.opacity = '1';
+
+                mdContainer.innerHTML = sanitizedHtml;
+                renderLatexInElement(mdContainer);
+                feather.replace();
+                return;
+            }
+
+            setPipelineStep(4, data);
+
+            const nbs = document.getElementById('notesBodySkeleton');
+            if (nbs) {
+                nbs.classList.remove('active');
+                nbs.style.display = 'none';
+            }
+            mdContainer.style.display = 'block';
+
+            if (tabChatBadge) {
+                tabChatBadge.style.opacity = '0';
+                tabChatBadge.style.transition = 'opacity 0.4s ease';
+            }
+
+            typeWriterText(tabNotesLabel, "Executive Notes", 20).then(() => {
+                typeWriterText(tabChatLabel, "Chat with Video", 20).then(() => {
+                    if (tabChatBadge) tabChatBadge.style.opacity = '1';
+                });
+            });
+
+            progressiveTextStream(mdContainer, sanitizedHtml, () => {
+                renderLatexInElement(mdContainer);
+                const loaderContainer = document.getElementById('loaderContainer');
+                if (loaderContainer) {
+                    loaderContainer.style.opacity = '0';
+                    loaderContainer.style.transform = 'translateX(-50%) translateY(-10px)';
+                    setTimeout(() => {
+                        loaderContainer.style.display = 'none';
+                    }, 380);
+                }
+                const heroSubmitBtn = document.getElementById('heroSubmitBtn');
+                if (heroSubmitBtn) heroSubmitBtn.disabled = false;
+                showToast("Lecture analysis complete!", "success");
+            });
+
             feather.replace();
         }
 
-        // Open YouTube in new tab at a specific timestamp
         function seekToTimestamp(seconds) {
             if (!activeAnalysis) return;
             const videoId = activeAnalysis.metadata.video_id;
@@ -775,7 +1157,6 @@
             window.open(url, '_blank');
         }
 
-        // Search highlight inside transcript scroller
         function handleTranscriptSearch() {
             const query = document.getElementById('transcriptSearch').value.toLowerCase().trim();
             const segments = document.querySelectorAll('.transcript-segment');
@@ -790,9 +1171,7 @@
             });
         }
 
-        // Download analysis as styled PDF document
         function downloadPDF() {
-            // Robust activeAnalysis recovery if opened from closed tab/history
             if (!activeAnalysis && lectureHistory.length > 0) {
                 const pathParts = window.location.pathname.split('/');
                 if (pathParts.length >= 3 && pathParts[1] === 'home') {
@@ -822,7 +1201,6 @@
 
             let markdownContent = activeAnalysis.analysis || '';
             if (!markdownContent.trim()) {
-                // If markdown string was somehow lost in stored history, extract text from container
                 markdownContent = mdContainer.innerText || mdContainer.textContent || '';
             }
 
@@ -836,8 +1214,6 @@
 
             showToast("Generating high-quality PDF report, please wait...", "info");
 
-            // Server-Side Python PDF Generation (ReportLab)
-            // Completely fixes broken tables, cut lines, misalignments, and excessive spacing
             fetch('/api/generate-pdf', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -881,7 +1257,6 @@
             });
         }
 
-        // --- Interactive Temporary Chat System ---
         let currentChatHistory = []; // Client-isolated temporary memory (0 leak between users)
 
         function switchRightTab(tabName) {
@@ -964,13 +1339,11 @@
             const query = input.value.trim();
             if (!query) return;
 
-            // Display user message in UI
             appendChatMessage('user', query);
             input.value = '';
             input.disabled = true;
             if (sendBtn) sendBtn.disabled = true;
 
-            // Typing indicator bubble
             const container = document.getElementById('chatMessages');
             const typingDiv = document.createElement('div');
             typingDiv.className = 'chat-message assistant typing-indicator';
@@ -1005,11 +1378,9 @@
                     throw new Error(data.error || 'Chat query failed.');
                 }
 
-                // Add to temporary client memory
                 currentChatHistory.push({ role: 'user', content: query });
                 currentChatHistory.push({ role: 'assistant', content: data.reply });
 
-                // Render assistant response
                 appendChatMessage('assistant', data.reply);
 
             } catch (err) {
@@ -1024,33 +1395,44 @@
             }
         }
 
-        // Cryptographically secure lecture ID generator
         function generateLectureId() {
+            const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const digits = '0123456789';
+            const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let result = '';
             try {
-                const bytes = new Uint8Array(4);
+                const bytes = new Uint8Array(20);
                 window.crypto.getRandomValues(bytes);
-                return Array.from(bytes, b => b.toString(36).padStart(2, '0')).join('').substring(0, 5).toUpperCase();
+                for (let i = 0; i < 20; i++) {
+                    result += chars[bytes[i] % chars.length];
+                }
             } catch (e) {
-                return (Date.now().toString(36) + Math.random().toString(36).substring(2, 5)).substring(0, 5).toUpperCase();
+                for (let i = 0; i < 20; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
             }
+            if (!/\d/.test(result)) {
+                const pos = Math.floor(Math.random() * 20);
+                result = result.substring(0, pos) + digits.charAt(Math.floor(Math.random() * digits.length)) + result.substring(pos + 1);
+            }
+            if (!/[a-zA-Z]/.test(result)) {
+                const pos = (Math.floor(Math.random() * 19) + 1) % 20;
+                result = result.substring(0, pos) + letters.charAt(Math.floor(Math.random() * letters.length)) + result.substring(pos + 1);
+            }
+            return result;
         }
 
-        // --- Persistent Local History Controls ---
         function saveToLocalStorageHistory(data) {
             try {
                 if (!data.lecture_id) {
                     data.lecture_id = generateLectureId();
                 }
 
-                // Push new URL state
                 window.history.pushState({}, '', '/home/' + data.lecture_id);
 
-                // Ensure duplicate entries are removed
                 lectureHistory = lectureHistory.filter(item => item.metadata.video_id !== data.metadata.video_id);
-                // Prepend new item
                 lectureHistory.unshift(data);
                 
-                // Limit history to 20 items to prevent storage overflow
                 if (lectureHistory.length > 20) {
                     lectureHistory.pop();
                 }
@@ -1058,7 +1440,6 @@
                 try {
                     localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
                 } catch (quotaErr) {
-                    // Quota exceeded: trim older items and retry
                     while (lectureHistory.length > 2) {
                         lectureHistory.pop();
                         try {
@@ -1073,15 +1454,65 @@
             }
         }
 
-        function loadHistoryFromStorage() {
-            const cached = localStorage.getItem('veda_lecture_history');
+        async function loadHistoryFromStorage() {
+            let cached = localStorage.getItem('veda_lecture_history') 
+                      || localStorage.getItem('angkor_lecture_history')
+                      || localStorage.getItem('lecture_history');
+
             if (cached) {
                 try {
-                    lectureHistory = JSON.parse(cached);
-                    renderHistoryUI();
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        let hasUpdatedIds = false;
+                        lectureHistory = parsed.map(item => {
+                            if (!item.lecture_id) {
+                                item.lecture_id = generateLectureId();
+                                hasUpdatedIds = true;
+                            }
+                            return item;
+                        });
+                        if (hasUpdatedIds) {
+                            try {
+                                localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
+                                localStorage.setItem('angkor_lecture_history', JSON.stringify(lectureHistory));
+                            } catch (e) {}
+                        }
+                        renderHistoryUI();
+                        try { localStorage.setItem('angkor_lecture_history', cached); } catch(e){}
+                        return;
+                    }
                 } catch (err) {
                     console.error("Failed to parse cached history:", err);
                 }
+            }
+
+            await restoreFromCloudVault(false);
+        }
+
+        async function restoreFromCloudVault(showManualToast = true) {
+            try {
+                if (showManualToast) showToast("Connecting to Cloud Vault...", "info");
+                const res = await fetch('/api/vault/recent');
+                const data = await res.json();
+                if (data.success && data.lectures && data.lectures.length > 0) {
+                    const existingIds = new Set(lectureHistory.map(l => l.metadata && l.metadata.video_id).filter(Boolean));
+                    const newItems = data.lectures.filter(l => l.metadata && !existingIds.has(l.metadata.video_id));
+                    lectureHistory = [...lectureHistory, ...newItems].slice(0, 30);
+
+                    try {
+                        localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
+                        localStorage.setItem('angkor_lecture_history', JSON.stringify(lectureHistory));
+                    } catch (e) {}
+
+                    renderHistoryUI();
+                    updateDataSummary();
+                    showToast(`🛡️ Cloud Vault: Restored ${lectureHistory.length} saved lectures in history!`, "success");
+                } else if (showManualToast) {
+                    showToast("No saved lectures found in Cloud Vault.", "info");
+                }
+            } catch (err) {
+                console.warn("Cloud recovery notice:", err);
+                if (showManualToast) showToast("Could not reach Cloud Vault. Check network.", "error");
             }
         }
 
@@ -1122,7 +1553,6 @@
                 metaDiv.appendChild(authorSpan);
                 metaDiv.appendChild(durSpan);
 
-                // Delete button
                 const delBtn = document.createElement('button');
                 delBtn.className = 'delete-btn';
                 delBtn.innerHTML = `<i data-feather="trash-2" style="width: 12px; height: 12px;"></i>`;
@@ -1138,6 +1568,16 @@
         }
 
         function loadHistoryItem(item, pushUrl = true) {
+            if (progressiveStreamTimer) {
+                clearTimeout(progressiveStreamTimer);
+                progressiveStreamTimer = null;
+            }
+            hideAllSkeletons();
+            const loaderContainer = document.getElementById('loaderContainer');
+            if (loaderContainer) {
+                loaderContainer.style.display = 'none';
+            }
+
             if (window.innerWidth <= 960) {
                 toggleSidebar(false);
             }
@@ -1148,9 +1588,8 @@
             document.getElementById('topNavSearch').style.display = 'flex';
             document.querySelector('#topNavSearch [name="youtubeUrl"]').value = item.metadata.url || '';
             
-            renderAnalysisResults(item);
+            renderAnalysisResults(item, false);
             
-            // Mark active history item
             document.querySelectorAll('.history-item').forEach(card => {
                 card.classList.remove('active');
             });
@@ -1158,7 +1597,6 @@
             renderHistoryUI();
             
             document.getElementById('resultsContainer').style.display = 'grid';
-            document.getElementById('loaderContainer').style.display = 'none';
         }
 
         function deleteHistoryItem(videoId, e) {
@@ -1176,7 +1614,6 @@
             showToast("Lecture removed from history.", "info");
         }
 
-        // Sidebar Toggle Logic (Supports Desktop Collapse & Mobile Off-Canvas Drawer)
         function toggleSidebar(forceState = null) {
             const isMobile = window.innerWidth <= 960;
             const container = document.querySelector('.app-container');
@@ -1197,12 +1634,10 @@
             }
         }
 
-        // Initialize sidebar state on load
         if (window.innerWidth > 960 && localStorage.getItem('veda_sidebar_collapsed') === 'true') {
             document.querySelector('.app-container').classList.add('collapsed-sidebar');
         }
 
-        // Close sidebar on mobile when tapping outside (backdrop or anywhere outside drawer)
         const sidebarBackdropEl = document.getElementById('sidebarBackdrop');
         if (sidebarBackdropEl) {
             const handleBackdropClose = (e) => {
@@ -1226,7 +1661,6 @@
             }
         });
 
-        // Handle viewport resize to reset mobile drawer
         window.addEventListener('resize', () => {
             if (window.innerWidth > 960) {
                 const container = document.querySelector('.app-container');
@@ -1236,8 +1670,17 @@
             }
         });
 
-        // Reset workspace for a new lecture
         function startNewLecture(pushUrl = true) {
+            if (progressiveStreamTimer) {
+                clearTimeout(progressiveStreamTimer);
+                progressiveStreamTimer = null;
+            }
+            hideAllSkeletons();
+            const loaderContainer = document.getElementById('loaderContainer');
+            if (loaderContainer) {
+                loaderContainer.style.display = 'none';
+            }
+
             if (window.innerWidth <= 960) {
                 toggleSidebar(false);
             }
@@ -1246,28 +1689,22 @@
             }
             activeAnalysis = null;
             document.getElementById('resultsContainer').style.display = 'none';
-            document.getElementById('loaderContainer').style.display = 'none';
             
-            // Show hero search, hide top nav search
             document.getElementById('heroSearch').style.display = 'flex';
             document.getElementById('topNavSearch').style.display = 'none';
             
-            // Clear inputs
             document.querySelectorAll('[name="youtubeUrl"]').forEach(input => input.value = '');
             
-            // Remove active selection from history
             document.querySelectorAll('.history-item').forEach(card => {
                 card.classList.remove('active');
             });
             
-            // Focus the hero search input box
             document.querySelector('#heroSearch [name="youtubeUrl"]').focus();
         }
 
-        // =====================================================================
-        // Settings & Cross-Browser Data Vault (Binary Archive, JSON, Sync)
-        // =====================================================================
         let currentSyncCode = null;
+        let currentVaultToken = null;
+        let currentVaultUrl = null;
         let syncTimerInterval = null;
         let pendingImportData = null;
 
@@ -1285,7 +1722,6 @@
                 feather.replace();
             }
         }
-        const openDataModal = openSettingsModal;
 
         function closeDataModal() {
             const backdrop = document.getElementById('dataModalBackdrop');
@@ -1339,37 +1775,13 @@
         function updateDataSummary() {
             const countEl = document.getElementById('exportLecturesCount');
             const sizeEl = document.getElementById('exportDataSize');
-            const sourceEl = document.getElementById('exportSourceLabel');
-            const ratioEl = document.getElementById('storageUsageRatio');
-            const fillEl = document.getElementById('storageMeterFill');
-
             const count = (lectureHistory || []).length;
             const rawJson = JSON.stringify(lectureHistory || []);
             const sizeInBytes = new Blob([rawJson]).size;
-
             if (countEl) countEl.textContent = count;
             if (sizeEl) sizeEl.textContent = formatBytes(sizeInBytes);
-
-            // 5 MB standard browser localStorage estimate
-            const maxEstimate = 5 * 1024 * 1024;
-            const percentage = Math.min(100, Math.max(1, ((sizeInBytes / maxEstimate) * 100))).toFixed(1);
-            if (ratioEl) ratioEl.textContent = `${formatBytes(sizeInBytes)} / ~5 MB (${percentage}%)`;
-            if (fillEl) fillEl.style.width = `${percentage}%`;
-
-            if (sourceEl) {
-                const userAgent = navigator.userAgent;
-                let browser = 'Browser';
-                if (userAgent.indexOf("Firefox") > -1) browser = 'Firefox';
-                else if (userAgent.indexOf("SamsungBrowser") > -1) browser = 'Samsung';
-                else if (userAgent.indexOf("Opera") > -1 || userAgent.indexOf("OPR") > -1) browser = 'Opera';
-                else if (userAgent.indexOf("Edge") > -1 || userAgent.indexOf("Edg") > -1) browser = 'Edge';
-                else if (userAgent.indexOf("Chrome") > -1) browser = 'Chrome';
-                else if (userAgent.indexOf("Safari") > -1) browser = 'Safari';
-                sourceEl.textContent = browser;
-            }
         }
 
-        // --- Binary Encoding / Decoding Engine (.angkor) ---
         function encodeAngkorBackup(payloadObj) {
             const jsonStr = JSON.stringify(payloadObj);
             const utf8Bytes = new TextEncoder().encode(jsonStr);
@@ -1396,7 +1808,6 @@
             return JSON.parse(inputStr);
         }
 
-        // --- Export Option 1: Protected Binary Archive (.angkor) ---
         function exportDataToAngkorBinary() {
             if (!lectureHistory || lectureHistory.length === 0) {
                 showToast("No lecture notes saved yet to export.", "info");
@@ -1426,7 +1837,6 @@
             showToast("Protected .angkor binary archive downloaded!", "success");
         }
 
-        // --- Export Option 2: Cloud 6-Digit Sync Code ---
         async function generateSyncCode() {
             if (!lectureHistory || lectureHistory.length === 0) {
                 showToast("No lecture notes saved yet. Analyze a lecture first!", "info");
@@ -1466,33 +1876,24 @@
                 const genArea = document.getElementById('syncCodeGeneratedArea');
                 if (genArea) genArea.style.display = 'flex';
 
-                // Security Architecture: Decimal -> Binary -> Hexadecimal Token
-                const rawNumericCode = data.raw_code || data.code.replace(/[^0-9]/g, '');
-                const decNum = parseInt(rawNumericCode, 10);
-                const binStr = decNum.toString(2);
-                const hexToken = parseInt(binStr, 2).toString(16).toUpperCase();
-                const qrPayload = "AKQR:" + hexToken;
+                const vaultToken = data.vault_token || ('ak_v1_' + (data.raw_code || ''));
+                currentVaultToken = vaultToken;
+                currentVaultUrl = `${window.location.origin}/home?vault=${encodeURIComponent(vaultToken)}`;
 
-                const hexBadgeEl = document.getElementById('qrHexBadge');
-                if (hexBadgeEl) {
-                    hexBadgeEl.textContent = qrPayload;
-                }
-
-                // Render High-Contrast Standard ISO QR Code (Black on White for instant camera readability)
                 const qrContainer = document.getElementById('syncQrCodeContainer');
                 if (qrContainer && typeof QRCode !== 'undefined') {
                     qrContainer.innerHTML = '';
                     new QRCode(qrContainer, {
-                        text: qrPayload,
+                        text: currentVaultUrl,
                         width: 180,
                         height: 180,
                         colorDark: "#000000",
                         colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.H
+                        correctLevel: QRCode.CorrectLevel.M
                     });
                 }
 
-                let remaining = data.expires_in_seconds || 900;
+                let remaining = data.expires_in_seconds || 180;
                 const countdownEl = document.getElementById('codeTimerCountdown');
 
                 if (syncTimerInterval) clearInterval(syncTimerInterval);
@@ -1500,8 +1901,10 @@
                     remaining--;
                     if (remaining <= 0) {
                         clearInterval(syncTimerInterval);
-                        countdownEl.textContent = 'Code expired. Generate a new one.';
+                        countdownEl.textContent = 'Expired (3m limit). Generate a new one.';
                         currentSyncCode = null;
+                        currentVaultUrl = null;
+                        currentVaultToken = null;
                     } else {
                         const m = Math.floor(remaining / 60);
                         const s = remaining % 60;
@@ -1509,7 +1912,7 @@
                     }
                 }, 1000);
 
-                showToast("Sync code generated! Enter it on your other browser.", "success");
+                showToast("Vault QR & Code generated! Valid for 3 minutes.", "success");
             } catch (err) {
                 console.error(err);
                 showToast(err.message || "Could not generate sync code. Check network.", "error");
@@ -1528,10 +1931,10 @@
                 if (textEl) textEl.textContent = 'Copied!';
                 if (iconEl) iconEl.setAttribute('data-feather', 'check');
                 if (typeof feather !== 'undefined') feather.replace();
-                showToast("Sync code copied to clipboard!", "success");
+                showToast("6-digit code copied to clipboard!", "success");
 
                 setTimeout(() => {
-                    if (textEl) textEl.textContent = 'Copy';
+                    if (textEl) textEl.textContent = 'Copy Code';
                     if (iconEl) iconEl.setAttribute('data-feather', 'copy');
                     if (typeof feather !== 'undefined') feather.replace();
                 }, 2000);
@@ -1540,7 +1943,56 @@
             });
         }
 
-        // --- Export Option 3: Standalone .JSON file download & Clipboard ---
+        function copyEncryptedVaultLink() {
+            if (!currentVaultUrl) {
+                showToast("Generate a QR code first.", "info");
+                return;
+            }
+            navigator.clipboard.writeText(currentVaultUrl).then(() => {
+                const textEl = document.getElementById('copyLinkText');
+                const iconEl = document.getElementById('copyLinkIcon');
+                if (textEl) textEl.textContent = 'Copied!';
+                if (iconEl) iconEl.setAttribute('data-feather', 'check');
+                if (typeof feather !== 'undefined') feather.replace();
+                showToast("Encrypted vault link copied! Valid for 3 minutes.", "success");
+
+                setTimeout(() => {
+                    if (textEl) textEl.textContent = 'Copy Link';
+                    if (iconEl) iconEl.setAttribute('data-feather', 'link');
+                    if (typeof feather !== 'undefined') feather.replace();
+                }, 2000);
+            }).catch(() => {
+                showToast("Could not copy link automatically.", "error");
+            });
+        }
+
+        function downloadQrImage() {
+            const qrContainer = document.getElementById('syncQrCodeContainer');
+            if (!qrContainer) return;
+            const img = qrContainer.querySelector('img');
+            const canvas = qrContainer.querySelector('canvas');
+            let dataUrl = null;
+            if (canvas && typeof canvas.toDataURL === 'function') {
+                try { dataUrl = canvas.toDataURL('image/png'); } catch (e) {}
+            }
+            if (!dataUrl && img && img.src) {
+                dataUrl = img.src;
+            }
+
+            if (!dataUrl) {
+                showToast("QR image is still rendering, please retry in a second.", "info");
+                return;
+            }
+
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `angkor_vault_qr_${Date.now()}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast("QR Code image saved! You can share it anywhere.", "success");
+        }
+
         function exportDataToFile() {
             if (!lectureHistory || lectureHistory.length === 0) {
                 showToast("No lecture notes saved yet to export.", "info");
@@ -1589,10 +2041,6 @@
             });
         }
 
-        // =====================================================================
-        // Mobile Camera QR Scanner (Html5Qrcode)
-        // Decodes: QR Payload -> Hexadecimal -> Binary -> Decimal
-        // =====================================================================
         let html5QrScannerInstance = null;
 
         function handleQrScannerBackdropClick(e) {
@@ -1601,7 +2049,6 @@
             }
         }
 
-        // Native Camera Photo Capture (Works 100% on HTTP IP Addresses without requiring HTTPS)
         function triggerQrCameraPhoto() {
             const input = document.getElementById('qrCameraPhotoInput');
             if (input) {
@@ -1631,12 +2078,9 @@
         }
 
         async function startQrScanner() {
-            // Check if we are on an insecure HTTP LAN IP address (like http://10.16.x.x:5000)
             const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
             const isSecure = window.isSecureContext || isLocalhost;
 
-            // If browser blocks live camera stream due to HTTP IP policy:
-            // Instantly open the phone's native camera! (No permission configuration required)
             if (!isSecure || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 triggerQrCameraPhoto();
                 return;
@@ -1668,13 +2112,11 @@
                         handleScannedQrPayload(decodedText);
                     },
                     (scanError) => {
-                        // ignore normal frame-by-frame parse logs
                     }
                 );
             } catch (err) {
                 console.warn("Live camera stream failed or blocked, opening native camera:", err);
                 stopQrScanner();
-                // Graceful instant fallback to native camera snapshot
                 triggerQrCameraPhoto();
             }
         }
@@ -1698,11 +2140,20 @@
 
             try {
                 let clean = (decodedText || '').trim();
+
+                if (clean.includes('vault=')) {
+                    const match = clean.match(/vault=([a-zA-Z0-9_-]+)/);
+                    if (match && match[1]) {
+                        showToast("Angkor Vault QR Verified! Fetching notes...", "success");
+                        fetchDirectVaultToken(match[1]);
+                        return;
+                    }
+                }
+
                 let hexToken = clean.replace(/^AKQR:/i, '').trim();
 
                 let decimalStr = '';
-                if (/^[0-9A-Fa-f]+$/.test(hexToken)) {
-                    // Security Decryption: Hexadecimal -> Binary -> Decimal
+                if (/^[0-9A-Fa-f]+$/.test(hexToken) && hexToken.length < 10) {
                     const binStr = parseInt(hexToken, 16).toString(2);
                     decimalStr = parseInt(binStr, 2).toString().padStart(6, '0');
                 } else {
@@ -1716,13 +2167,11 @@
 
                 showToast("Angkor QR Code Verified! Fetching notes...", "success");
 
-                // Auto-fill formatted code into input
                 const input = document.getElementById('syncCodeInput');
                 if (input) {
                     input.value = decimalStr.slice(0, 3) + '-' + decimalStr.slice(3, 6);
                 }
 
-                // Automatically trigger fetch and preview
                 fetchFromSyncCode();
             } catch (err) {
                 console.error("QR decode error:", err);
@@ -1730,7 +2179,21 @@
             }
         }
 
-        // --- Import Feature 1: Load via 6-digit Sync Code ---
+        async function fetchDirectVaultToken(token) {
+            showToast("Fetching encrypted vault data...", "info");
+            try {
+                const res = await fetch(`/api/sync/fetch?vault=${encodeURIComponent(token)}&sync_action=fetch`);
+                const data = await res.json();
+                if (!res.ok || !data.success || !data.payload) {
+                    throw new Error(data.error || "Vault token has expired or is invalid.");
+                }
+                showImportPreview(data.payload);
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || "Failed to fetch vault data.", "error");
+            }
+        }
+
         function formatCodeInput(input) {
             let val = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             if (val.length > 3) {
@@ -1751,7 +2214,7 @@
             const btn = document.getElementById('fetchSyncBtn');
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = `<i data-feather="loader" class="spin"></i> <span>Fetching...</span>`;
+            btn.innerHTML = `<i data-feather="loader" class="spin"></i>`;
             if (typeof feather !== 'undefined') feather.replace();
 
             try {
@@ -1774,7 +2237,6 @@
             }
         }
 
-        // --- Import Feature 2: Dropzone & File upload (.angkor and .json) ---
         function triggerFileInput() {
             const fileInput = document.getElementById('importFileInput');
             if (fileInput) fileInput.click();
@@ -1842,7 +2304,6 @@
             }
         }
 
-        // --- Import Preview & Validation ---
         function showImportPreview(incomingData) {
             let items = [];
 
@@ -1905,7 +2366,6 @@
             pendingImportData = null;
         }
 
-        // --- Confirm Import (Regenerates Brand New Unique Chat/Lecture IDs) ---
         function confirmImportData() {
             if (!pendingImportData || pendingImportData.length === 0) {
                 showToast("No pending data to import.", "info");
@@ -1915,8 +2375,6 @@
             const modeRadio = document.querySelector('input[name="importMode"]:checked');
             const mode = modeRadio ? modeRadio.value : 'merge';
 
-            // REGENERATE FRESH UNIQUE LECTURE_ID FOR EVERY IMPORTED NOTE
-            // Ensures chat/session ID is unique in this browser while preserving all notes & transcripts
             const incoming = pendingImportData.map(item => {
                 const freshSessionId = generateLectureId();
                 return {
@@ -1960,7 +2418,6 @@
             }
         }
 
-        // --- Danger Zone: Clear All Stored Lectures ---
         function clearAllStoredHistory() {
             const confirmed = window.confirm(
                 "Are you sure you want to delete all saved lecture history from this browser?\n\nThis will permanently wipe your notes and transcripts from this device. (Make sure you downloaded a .angkor backup if you want to keep them)."
@@ -1977,6 +2434,89 @@
             updateDataSummary();
             closeDataModal();
             showToast("All stored lectures have been deleted from this browser.", "info");
+        }
+
+        async function checkUrlForEncryptedVault() {
+            const params = new URLSearchParams(window.location.search);
+            const vaultToken = params.get('vault');
+            const syncCode = params.get('sync') || params.get('code');
+            const targetToken = vaultToken || syncCode;
+
+            if (!targetToken) return;
+
+            showToast("🔒 Encrypted lecture vault detected! Syncing notes...", "info");
+
+            try {
+                const query = vaultToken ? `vault=${encodeURIComponent(vaultToken)}` : `code=${encodeURIComponent(syncCode)}`;
+                const res = await fetch(`/api/sync/fetch?${query}&sync_action=fetch`);
+                const data = await res.json();
+
+                if (!res.ok || !data.success || !data.payload) {
+                    throw new Error(data.error || "This sync link has expired (3-minute limit) or is invalid.");
+                }
+
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+
+                const restoredCount = applyDirectVaultImport(data.payload);
+                showToast(`🎉 Welcome! ${restoredCount} lecture notes synced successfully!`, "success");
+            } catch (err) {
+                console.error("Auto-sync error:", err);
+                showToast(err.message || "Failed to sync lecture notes from link.", "error");
+            }
+        }
+
+        function applyDirectVaultImport(incomingData) {
+            let items = [];
+            if (Array.isArray(incomingData)) {
+                items = incomingData;
+            } else if (incomingData && Array.isArray(incomingData.history)) {
+                items = incomingData.history;
+            } else if (incomingData && typeof incomingData === 'object' && incomingData.metadata) {
+                items = [incomingData];
+            }
+
+            const validItems = items.filter(item => item && (item.metadata || item.analysis));
+            if (validItems.length === 0) return 0;
+
+            const incoming = validItems.map(item => {
+                const freshSessionId = generateLectureId();
+                return {
+                    ...item,
+                    lecture_id: freshSessionId,
+                    metadata: {
+                        ...(item.metadata || {}),
+                        title: (item.metadata && item.metadata.title) || item.title || 'Imported Lecture',
+                        author: (item.metadata && item.metadata.author) || item.author || 'Unknown',
+                        duration: (item.metadata && item.metadata.duration) || null,
+                        video_id: (item.metadata && item.metadata.video_id) || item.video_id || freshSessionId
+                    }
+                };
+            });
+
+            const incomingVideoIds = new Set(incoming.map(it => it.metadata.video_id).filter(Boolean));
+            const filteredExisting = lectureHistory.filter(it => !it.metadata.video_id || !incomingVideoIds.has(it.metadata.video_id));
+            lectureHistory = [...incoming, ...filteredExisting].slice(0, 30);
+
+            try {
+                localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
+            } catch (err) {
+                console.warn("Storage quota trimmed on auto-import:", err);
+                lectureHistory = lectureHistory.slice(0, 15);
+                try {
+                    localStorage.setItem('veda_lecture_history', JSON.stringify(lectureHistory));
+                } catch (e) {}
+            }
+
+            renderHistoryUI();
+            updateDataSummary();
+
+            if (lectureHistory.length > 0) {
+                loadHistoryItem(lectureHistory[0]);
+            }
+
+            return incoming.length;
         }
     </script>
 </body>
