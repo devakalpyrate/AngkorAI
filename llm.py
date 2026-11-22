@@ -4,26 +4,55 @@ from google import genai
 from openai import OpenAI
 
 ANALYSIS_SYSTEM_PROMPT = """
-You are an Executive Video Intelligence Analyst. Analyze the following YouTube video transcript and break down the ground reality of what is being discussed.
+You are Angkor AI's Chief Video Intelligence Analyst and Technical Synthesizer. Analyze the provided YouTube video transcript and produce an authoritative, publication-grade executive intelligence document.
 
-CRITICAL INSTRUCTIONS:
-1. LANGUAGE: Your entire output MUST be strictly in clear, professional ENGLISH only, regardless of whatever language or mix of languages (e.g. Hindi, Hinglish, regional) was spoken in the video.
-2. CORE MISSION: Deliver a sharp, high-signal breakdown of the actual subject matter: tell the user exactly what is happening, what is NOT happening (misconceptions/nuances/refutations), and the real crux without any filler or fluff.
-3. MATHEMATICS & FORMULAS: If formulas, equations, code, or technical metrics appear, format them using standard LaTeX notation ($...$ for inline, $$...$$ for display).
-4. REPLACING PLACEHOLDERS: Replace all section titles and bullet placeholders with the actual substantive analysis from the video. Do not output generic placeholders.
+CRITICAL FORMATTING & SYNTACTICAL DIRECTIVES:
+1. LANGUAGE: Output strictly in clear, refined, professional ENGLISH only, regardless of whatever spoken mix (Hindi, Hinglish, regional colloquialisms) was in the video.
+2. HIERARCHICAL STRUCTURE (MANDATORY):
+   - Use # for the main document title (concise, analytical, authoritative).
+   - Use ## for top-level thematic sections.
+   - Use ### for granular subheadings under major thematic breakdowns.
+   - Provide rich, substantive body paragraphs and structured bullet lists beneath headings and subheadings.
+3. STRUCTURED COMPARISON & METRIC TABLES (MANDATORY):
+   - You MUST include at least one comprehensive GitHub Flavored Markdown (GFM) table (| Col 1 | Col 2 | Col 3 |) comparing concepts, detailing chronological phases, comparing before-vs-after states, breaking down technical trade-offs, architecture specifications, or metrics.
+   - Table headers must be descriptive, with cleanly aligned columns.
+4. MATHEMATICAL & TECHNICAL FORMULAS (LaTeX):
+   - Use standard LaTeX for any math, formulas, algorithmic complexities, loss functions, physical laws, or financial models mentioned:
+     * Inline math: $...$ (e.g. $O(N \\log N)$, $\\alpha = 0.05$)
+     * Multi-term display equations on their own line: $$...$$
+5. ZERO GENERIC FILLER:
+   - Ban all meta-commentary like "In this video the author explains", "The transcript discusses", or "The speaker says".
+   - State facts, mechanisms, and ground realities directly with authority.
+   - Replace every placeholder with concrete, factual data from the video.
 
-Output your response in clean Markdown with the following exact structure:
+MANDATORY DOCUMENT STRUCTURE:
 
-- (2-3 crisp bullet points explaining the core essence and main takeaway of the video)
+# [Definitive, High-Signal Title of the Topic or Lecture]
 
-- (Detail the main arguments, events, claims, and ground reality presented)
-- (Include specific facts, examples, frameworks, or data points discussed)
-- (Explain the key mechanisms or insights revealed in the video)
+## ⚡ Executive Crux & Core Thesis
+- 2-3 substantive, high-signal bullet points synthesizing the ground reality, primary discovery, or overarching thesis.
+- A concise summary paragraph placing the subject in context.
 
-- (Clarify what is NOT true, what the speaker refuted, or where people commonly get misled)
-- (Highlight limitations, counter-arguments, caveats, or missing context)
+## 🔍 Detailed Architecture & Core Breakdown
+### [First Key Theme / Mechanism / Module]
+Detailed analysis of the ground reality, foundational arguments, structural mechanics, and specific facts presented in the video.
 
-- (Direct, actionable summary: what does this actually mean for the viewer?)
+### [Second Key Theme / Mechanism / Module]
+Deep-dive into the technical, business, or conceptual execution, providing specific examples, frameworks, data points, or code/algorithmic steps.
+
+## 📊 Comparative Analysis & Structural Matrix
+| Dimension / Component | Traditional / Prior State | New Approach / Speaker's Reality | Impact & Crux |
+| :--- | :--- | :--- | :--- |
+| [Item 1] | [Prior state or common view] | [Speaker's proven reality] | [Observable outcome] |
+| [Item 2] | [Prior state or common view] | [Speaker's proven reality] | [Observable outcome] |
+| [Item 3] | [Prior state or common view] | [Speaker's proven reality] | [Observable outcome] |
+
+## ⚠️ Critical Nuances, Counter-Arguments & Misconceptions
+- **What Is NOT Happening:** Explicitly clarify misconceptions, myths debunked, or what viewers commonly misunderstand about this subject.
+- **Constraints & Edge Cases:** Identify genuine limitations, dependencies, cost factors, or trade-offs acknowledged by the speaker.
+
+## 🎯 Actionable Takeaways & Next Steps
+- Concrete, actionable takeaways for the viewer: what to implement, watch out for, or verify in practice.
 
 Transcript:
 {transcript_text}
@@ -161,42 +190,42 @@ def analyze_transcript_sarvam(transcript_text: str, sarvam_key: str, model_name:
     return choice_msg.get("content") or choice_msg.get("reasoning_content") or ""
 
 def generate_video_intelligence(transcript_text: str, keys: dict, sarvam_model: str = "sarvam-105b-conversations"):
+    user_nvidia_key = keys.get('nvidia', '').strip()
     user_groq_key = keys.get('groq', '').strip()
     user_gemini_key = keys.get('gemini', '').strip()
-    user_nvidia_key = keys.get('nvidia', '').strip()
     user_sarvam_key = keys.get('sarvam', '').strip()
 
     error_messages = []
 
+    if user_nvidia_key:
+        try:
+            logging.info("Running NVIDIA NIM video intelligence (Priority 1: Primary)...")
+            result = analyze_transcript_nvidia(transcript_text, user_nvidia_key)
+            if result:
+                return result, "NVIDIA NIM (Nemotron 3 Ultra)"
+        except Exception as e:
+            logging.warning("NVIDIA NIM analysis failed: %s", e)
+            error_messages.append(f"NVIDIA: {str(e)}")
+
     if user_groq_key:
         try:
-            logging.info("Running Groq LPU video intelligence (Priority 1)...")
+            logging.info("Running Groq LPU video intelligence fallback (Priority 2)...")
             result = analyze_transcript_groq(transcript_text, user_groq_key)
             if result:
-                return result, "Groq (LLaMA 3.3 70B)"
+                return result, "Groq LPU (Qwen/GPT)"
         except Exception as e:
             logging.warning("Groq analysis failed: %s", e)
             error_messages.append(f"Groq: {str(e)}")
 
     if user_gemini_key:
         try:
-            logging.info("Running Google Gemini Flash video intelligence fallback (Priority 2)...")
+            logging.info("Running Google Gemini Flash video intelligence fallback (Priority 3)...")
             result = analyze_transcript_gemini(transcript_text, user_gemini_key)
             if result:
                 return result, "Google Gemini Flash"
         except Exception as e:
             logging.warning("Gemini analysis failed: %s", e)
             error_messages.append(f"Gemini: {str(e)}")
-
-    if user_nvidia_key:
-        try:
-            logging.info("Running NVIDIA NIM video intelligence fallback (Priority 3)...")
-            result = analyze_transcript_nvidia(transcript_text, user_nvidia_key)
-            if result:
-                return result, "NVIDIA NIM (LLaMA 3.3)"
-        except Exception as e:
-            logging.warning("NVIDIA NIM analysis failed: %s", e)
-            error_messages.append(f"NVIDIA: {str(e)}")
 
     if user_sarvam_key:
         try:
@@ -233,9 +262,10 @@ CRITICAL INSTRUCTIONS:
    - Ground all substantive answers strictly in the facts, claims, experiments, data points, timestamps, and arguments presented in the video.
    - If the user asks about something not discussed in the video, state naturally: "The video doesn't cover this, but here is brief context..."
 
-4. FORMATTING & LANGUAGE:
-   - Keep answers crisp, high-signal, engaging, and beautifully formatted.
-   - Use clean bullet points, bold key terms, and LaTeX notation ($...$ for inline, $$...$$ for display) for any math or equations.
+4. FORMATTING, TABLES & LATEX:
+   - Structure your output elegantly using clear headings, subheadings, and concise paragraphs.
+   - Use GitHub Flavored Markdown tables (| Col 1 | Col 2 | Col 3 |) whenever comparing items, summarizing timelines, metrics, trade-offs, or architectures.
+   - Use standard LaTeX notation ($...$ for inline, $$...$$ for display equations) for any mathematics, formulas, algorithms, or technical metrics.
    - Respond in clear, professional English (unless the user speaks to you in Hindi or Hinglish, in which case match their language naturally).
 
 Video Knowledge Context:
@@ -244,8 +274,8 @@ Video Knowledge Context:
 
 def chat_with_transcript(transcript_text: str, message: str, history: list, keys: dict) -> str:
     user_nvidia_key = keys.get('nvidia', '').strip()
-    user_gemini_key = keys.get('gemini', '').strip()
     user_groq_key = keys.get('groq', '').strip()
+    user_gemini_key = keys.get('gemini', '').strip()
 
     system_instruction = CHAT_SYSTEM_PROMPT.format(transcript_text=transcript_text[:20000])
 
@@ -256,6 +286,24 @@ def chat_with_transcript(transcript_text: str, message: str, history: list, keys
                 r = h['role'] if h['role'] in ('user', 'assistant') else 'user'
                 messages.append({"role": r, "content": str(h['content'])[:2000]})
     messages.append({"role": "user", "content": str(message)[:3000]})
+
+    if user_nvidia_key:
+        client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=user_nvidia_key)
+        for model_name in ["nvidia/nemotron-3-ultra-550b-a55b"]:
+            try:
+                completion = client.chat.completions.create(
+                    model=model_name,
+                    messages=messages,
+                    temperature=0.4,
+                    max_tokens=1500,
+                    timeout=20.0
+                )
+                ans = completion.choices[0].message.content
+                if ans:
+                    return ans.strip()
+            except Exception as e:
+                logging.warning("NVIDIA Chat model %s failed: %s", model_name, e)
+                continue
 
     if user_groq_key:
         for groq_m in ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
@@ -294,24 +342,6 @@ def chat_with_transcript(transcript_text: str, message: str, history: list, keys
                     return response.text.strip()
             except Exception as e:
                 logging.warning("Gemini Chat model %s fallback error: %s", gem_m, e)
-
-    if user_nvidia_key:
-        client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=user_nvidia_key)
-        for model_name in ["nvidia/nemotron-3-ultra-550b-a55b"]:
-            try:
-                completion = client.chat.completions.create(
-                    model=model_name,
-                    messages=messages,
-                    temperature=0.4,
-                    max_tokens=1500,
-                    timeout=20.0
-                )
-                ans = completion.choices[0].message.content
-                if ans:
-                    return ans.strip()
-            except Exception as e:
-                logging.warning("NVIDIA Chat model %s failed: %s", model_name, e)
-                continue
 
     raise RuntimeError("All AI chat providers failed to respond. Please check your API keys.")
 
