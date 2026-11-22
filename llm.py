@@ -40,8 +40,7 @@ def analyze_transcript_groq(transcript_text: str, groq_key: str, model_name: str
         model_name,
         "qwen/qwen3.8-27b",
         "openai/gpt-oss-120b",
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant"
+        "openai/gpt-oss-20b"
     ]
     models_to_try = []
     for m in candidate_models:
@@ -72,7 +71,7 @@ def analyze_transcript_groq(transcript_text: str, groq_key: str, model_name: str
             continue
     raise last_err or RuntimeError("All Groq models failed.")
 
-def analyze_transcript_nvidia(transcript_text: str, nvidia_key: str, model_name: str = "meta/llama-3.3-70b-instruct"):
+def analyze_transcript_nvidia(transcript_text: str, nvidia_key: str, model_name: str = "nvidia/nemotron-3-ultra-550b-a55b"):
     client = OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
         api_key=nvidia_key
@@ -82,9 +81,7 @@ def analyze_transcript_nvidia(transcript_text: str, nvidia_key: str, model_name:
 
     candidate_models = [
         model_name,
-        "meta/llama-3.3-70b-instruct",
-        "mistralai/mistral-large-2-instruct",
-        "nvidia/llama-3.1-nemotron-70b-instruct"
+        "nvidia/nemotron-3-ultra-550b-a55b"
     ]
     models_to_try = []
     for m in candidate_models:
@@ -126,7 +123,7 @@ def analyze_transcript_gemini(transcript_text: str, gemini_key: str):
 
     prompt = ANALYSIS_SYSTEM_PROMPT.format(transcript_text=transcript_text[:24000])
 
-    candidate_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    candidate_models = ["gemini-2.5-flash", "gemini-3-flash-preview"]
     last_err = None
     for model_name in candidate_models:
         try:
@@ -261,7 +258,7 @@ def chat_with_transcript(transcript_text: str, message: str, history: list, keys
     messages.append({"role": "user", "content": str(message)[:3000]})
 
     if user_groq_key:
-        for groq_m in ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"]:
+        for groq_m in ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
             try:
                 headers = {"Authorization": f"Bearer {user_groq_key}", "Content-Type": "application/json"}
                 payload = {
@@ -281,25 +278,26 @@ def chat_with_transcript(transcript_text: str, message: str, history: list, keys
                 logging.warning("Groq Chat model %s error: %s", groq_m, e)
 
     if user_gemini_key:
-        try:
-            client = genai.Client(api_key=user_gemini_key)
-            gemini_prompt = f"{system_instruction}\n\nConversation History:\n"
-            for m in messages[1:]:
-                gemini_prompt += f"{m['role'].upper()}: {m['content']}\n"
-            gemini_prompt += f"\nASSISTANT:"
+        for gem_m in ["gemini-2.5-flash", "gemini-3-flash-preview"]:
+            try:
+                client = genai.Client(api_key=user_gemini_key)
+                gemini_prompt = f"{system_instruction}\n\nConversation History:\n"
+                for m in messages[1:]:
+                    gemini_prompt += f"{m['role'].upper()}: {m['content']}\n"
+                gemini_prompt += f"\nASSISTANT:"
 
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=gemini_prompt
-            )
-            if response and response.text:
-                return response.text.strip()
-        except Exception as e:
-            logging.warning("Gemini Chat fallback error: %s", e)
+                response = client.models.generate_content(
+                    model=gem_m,
+                    contents=gemini_prompt
+                )
+                if response and response.text:
+                    return response.text.strip()
+            except Exception as e:
+                logging.warning("Gemini Chat model %s fallback error: %s", gem_m, e)
 
     if user_nvidia_key:
         client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=user_nvidia_key)
-        for model_name in ["meta/llama-3.3-70b-instruct", "mistralai/mistral-large-2-instruct", "nvidia/llama-3.1-nemotron-70b-instruct"]:
+        for model_name in ["nvidia/nemotron-3-ultra-550b-a55b"]:
             try:
                 completion = client.chat.completions.create(
                     model=model_name,
